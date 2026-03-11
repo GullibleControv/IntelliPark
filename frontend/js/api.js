@@ -3,7 +3,8 @@
  * Handles all API communication with the backend
  */
 
-const API_BASE_URL = 'http://localhost:5000/api';
+// Use relative URL for Docker (nginx proxy) or absolute for local dev
+const API_BASE_URL = window.location.port === '8080' ? '/api' : 'http://localhost:5000/api';
 
 class ApiClient {
     constructor() {
