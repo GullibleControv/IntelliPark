@@ -3,29 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - Intelli Park</title>
+    <title>Register - IntelliPark</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/additional.css">
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar">
         <div class="logo">
-            <img src="assets/Logo-Short 1.png" alt="IntelliPark Logo">
+            <a href="index.html">
+                <img src="assets/Logo-Short 1.png" alt="IntelliPark Logo">
+            </a>
         </div>
         <div class="nav-links">
             <a href="index.html">Home</a>
-            <a href="profile.html">Profile</a>
             <a href="about.html">About Us</a>
             <a href="contact.html">Contact Us</a>
         </div>
-        <div class="auth-buttons">
-            <button class="btn btn-login" onclick="window.location.href='login.html'">Login</button>
-            <button class="btn btn-register" onclick="window.location.href='register.html'">Register</button>
+        <div id="auth-nav" class="auth-buttons">
+            <a href="login.html" class="btn btn-login">Login</a>
+            <a href="register.html" class="btn btn-register">Register</a>
         </div>
     </nav>
 
-    <!-- Hero Section with Steering Wheels -->
+    <!-- Hero Section -->
     <section class="hero-section">
         <div class="steering-wheels">
             <img src="assets/steering-wheel.svg" alt="Steering Wheel" class="wheel">
@@ -41,22 +43,19 @@
         </div>
     </section>
 
-    <!-- Sign Up Form Section -->
-    <section class="signup-section">
-        <div class="signup-form-container">
-            <h2 style="white-space: nowrap;">Sign Up to Intelli-Park</h2>
-            <p class="signup-subtitle">Fill in the form below to get instant access</p>
-            
-            <form class="signup-form">
-                <p class="form-label">Sign Up As:</p>
-                
-                <div class="name-group">
-                    <div class="form-group">
-                        <input type="text" id="firstName" placeholder="First Name" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" id="lastName" placeholder="Last Name" required>
-                    </div>
+    <!-- Register Form Section -->
+    <section class="login-section">
+        <div class="login-form-container">
+            <h2>Create Your Account</h2>
+            <p class="login-subtitle">Join IntelliPark today</p>
+
+            <!-- Error/Success Messages -->
+            <div id="error-message" class="error-message" style="display: none;"></div>
+            <div id="success-message" class="success-message" style="display: none;"></div>
+
+            <form id="register-form" class="login-form">
+                <div class="form-group">
+                    <input type="text" id="name" placeholder="Full Name" required>
                 </div>
 
                 <div class="form-group">
@@ -64,23 +63,22 @@
                 </div>
 
                 <div class="form-group">
-                    <input type="password" id="password" placeholder="Password" required>
+                    <input type="tel" id="phone" placeholder="Phone Number (optional)">
                 </div>
 
                 <div class="form-group">
-                    <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+                    <input type="password" id="password" placeholder="Password (min 8 chars, 1 uppercase, 1 number)" required>
                 </div>
 
                 <div class="form-group">
-                    <input type="tel" id="phone" placeholder="Phone Number" required>
+                    <input type="password" id="confirm-password" placeholder="Confirm Password" required>
                 </div>
 
-                <button type="submit" class="signup-btn">Sign Up</button>
-                
-                <div class="login-link">
-                    <p>or</p>
-                    <p>Already have an account? <a href="login.html">Log in here</a></p>
-                </div>
+                <button type="submit" id="register-btn" class="login-btn">Create Account</button>
+
+                <p class="signup-link">
+                    Already have an account? <a href="login.html">Log in here</a>
+                </p>
             </form>
         </div>
     </section>
@@ -91,37 +89,96 @@
             <div class="footer-brand">
                 <img src="assets/Logo-Long  1.png" alt="IntelliPark Logo">
                 <p>Smart Parking Solutions for Modern Cities</p>
-                <div class="social-links">
-                    <!-- Add social media icons -->
-                </div>
             </div>
             <div class="footer-links">
                 <h3>Organization</h3>
-                <br>
                 <ul>
-                    <li><a href="#">About Us</a></li>
-                    <li><a href="#">Support</a></li>
-                    <li><a href="#">Contact Us</a></li>
-                    <li><a href="#">Home</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="index.html">Home</a></li>
                 </ul>
             </div>
             <div class="footer-contact">
                 <h3>Get In Touch</h3>
-                <br>
                 <p>+91 91012-27640</p>
                 <p>+91 876105-5433</p>
-                <br>
-                <p>NH-37, Dept. Of CSE,<br>
-                   Kaziranga University, Jorhat<br>
-                   Assam 8875006</p>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>Copyright 2025 Intelli Park</p>
-            <p>All Rights Reserved.</p>
+            <p>Copyright 2025 IntelliPark. All Rights Reserved.</p>
         </div>
     </footer>
 
-    <script src="main.js"></script>
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // Redirect if already logged in
+        if (api.isAuthenticated()) {
+            window.location.href = 'index.html';
+        }
+
+        // Handle register form submission
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const registerBtn = document.getElementById('register-btn');
+            const errorDiv = document.getElementById('error-message');
+            const successDiv = document.getElementById('success-message');
+
+            // Hide previous messages
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
+            // Validate inputs
+            if (!name || !email || !password || !confirmPassword) {
+                errorDiv.textContent = 'Please fill in all required fields.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                errorDiv.textContent = 'Passwords do not match.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (password.length < 8) {
+                errorDiv.textContent = 'Password must be at least 8 characters.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Set loading state
+            registerBtn.disabled = true;
+            registerBtn.textContent = 'Creating Account...';
+
+            try {
+                await api.register(email, password, name, phone || null);
+
+                // Show success message
+                successDiv.textContent = 'Account created successfully! Redirecting...';
+                successDiv.style.display = 'block';
+
+                // Redirect after short delay
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+
+            } catch (error) {
+                errorDiv.textContent = error.message || 'Registration failed. Please try again.';
+                errorDiv.style.display = 'block';
+
+                // Reset button
+                registerBtn.disabled = false;
+                registerBtn.textContent = 'Create Account';
+            }
+        });
+    </script>
 </body>
 </html>

@@ -3,25 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Intelli Park</title>
+    <title>Login - IntelliPark</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/additional.css">
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar">
         <div class="logo">
-            <img src="assets/Logo-Short 1.png" alt="IntelliPark Logo">
+            <a href="index.html">
+                <img src="assets/Logo-Short 1.png" alt="IntelliPark Logo">
+            </a>
         </div>
         <div class="nav-links">
             <a href="index.html">Home</a>
-            <a href="profile.html">Profile</a>
             <a href="about.html">About Us</a>
             <a href="contact.html">Contact Us</a>
         </div>
-        <div class="auth-buttons">
-            <button class="btn btn-login">Login</button>
-            <button class="btn btn-register">Register</button>
+        <div id="auth-nav" class="auth-buttons">
+            <a href="login.html" class="btn btn-login">Login</a>
+            <a href="register.html" class="btn btn-register">Register</a>
         </div>
     </nav>
 
@@ -44,10 +46,14 @@
     <!-- Login Form Section -->
     <section class="login-section">
         <div class="login-form-container">
-            <h2>Log In to Intelli-Park</h2>
-            <p class="login-subtitle">Enter username and password</p>
-            
-            <form class="login-form">
+            <h2>Log In to IntelliPark</h2>
+            <p class="login-subtitle">Enter your email and password</p>
+
+            <!-- Error/Success Messages -->
+            <div id="error-message" class="error-message" style="display: none;"></div>
+            <div id="success-message" class="success-message" style="display: none;"></div>
+
+            <form id="login-form" class="login-form">
                 <div class="form-group">
                     <input type="email" id="email" placeholder="E-Mail" required>
                 </div>
@@ -56,8 +62,8 @@
                     <input type="password" id="password" placeholder="Password" required>
                 </div>
 
-                <button type="submit" class="login-btn">Log in</button>
-                
+                <button type="submit" id="login-btn" class="login-btn">Log in</button>
+
                 <p class="signup-link">
                     Don't have an account? <a href="register.html">Sign Up here</a>
                 </p>
@@ -71,37 +77,81 @@
             <div class="footer-brand">
                 <img src="assets/Logo-Long  1.png" alt="IntelliPark Logo">
                 <p>Smart Parking Solutions for Modern Cities</p>
-                <div class="social-links">
-                    <!-- Add social media icons -->
-                </div>
             </div>
             <div class="footer-links">
                 <h3>Organization</h3>
-                <br>
                 <ul>
-                    <li><a href="#">About Us</a></li>
-                    <li><a href="#">Support</a></li>
-                    <li><a href="#">Contact Us</a></li>
-                    <li><a href="#">Home</a></li>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="index.html">Home</a></li>
                 </ul>
             </div>
             <div class="footer-contact">
                 <h3>Get In Touch</h3>
-                <br>
                 <p>+91 91012-27640</p>
                 <p>+91 876105-5433</p>
-                <br>
-                <p>NH-37, Dept. Of CSE,<br>
-                   Kaziranga University, Jorhat<br>
-                   Assam 8875006</p>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>Copyright 2025 Intelli Park</p>
-            <p>All Rights Reserved.</p>
+            <p>Copyright 2025 IntelliPark. All Rights Reserved.</p>
         </div>
     </footer>
 
-    <script src="main.js"></script>
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // Redirect if already logged in
+        if (api.isAuthenticated()) {
+            window.location.href = 'index.html';
+        }
+
+        // Handle login form submission
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('login-btn');
+            const errorDiv = document.getElementById('error-message');
+            const successDiv = document.getElementById('success-message');
+
+            // Hide previous messages
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
+            // Validate inputs
+            if (!email || !password) {
+                errorDiv.textContent = 'Please enter both email and password.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Set loading state
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logging in...';
+
+            try {
+                await api.login(email, password);
+
+                // Show success message
+                successDiv.textContent = 'Login successful! Redirecting...';
+                successDiv.style.display = 'block';
+
+                // Redirect after short delay
+                setTimeout(() => {
+                    auth.redirectAfterLogin();
+                }, 1000);
+
+            } catch (error) {
+                errorDiv.textContent = error.message || 'Login failed. Please try again.';
+                errorDiv.style.display = 'block';
+
+                // Reset button
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Log in';
+            }
+        });
+    </script>
 </body>
 </html>

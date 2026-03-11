@@ -1,32 +1,34 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Parking Monitor</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - Intelli Park</title>
+    <title>IntelliPark - Smart Parking Solutions</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/x-icon" href="assets/favicon.icon">
+    <link rel="stylesheet" href="css/additional.css">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 </head>
 <body>
-     <!-- Navbar -->
-     <nav class="navbar">
+    <!-- Navbar -->
+    <nav class="navbar">
         <div class="logo">
-            <img src="assets/Logo-Short 1.png" alt="IntelliPark Logo">
+            <a href="index.html">
+                <img src="assets/Logo-Short 1.png" alt="IntelliPark Logo">
+            </a>
         </div>
         <div class="nav-links">
             <a href="index.html">Home</a>
-            <a href="profile.html" class="active">Profile</a>
+            <a href="parking-search.html">Find Parking</a>
             <a href="about.html">About Us</a>
             <a href="contact.html">Contact Us</a>
         </div>
-        <div class="auth-buttons">
-            <button class="btn btn-login" onclick="window.location.href='login.html'">Login</button>
-            <button class="btn btn-register" onclick="window.location.href='register.html'">Register</button>
+        <div id="auth-nav" class="auth-buttons">
+            <a href="login.html" class="btn btn-login">Login</a>
+            <a href="register.html" class="btn btn-register">Register</a>
         </div>
     </nav>
 
-    <!-- Hero Section with Steering Wheels -->
+    <!-- Hero Section -->
     <section class="hero-section">
         <div class="steering-wheels">
             <img src="assets/steering-wheel.svg" alt="Steering Wheel" class="wheel">
@@ -42,84 +44,74 @@
         </div>
     </section>
 
-    <!-- Main Output-->
-
-    <section class="profile-section">
-        <div class="profile-container">
-            <h1 class="profile-title">Parking Availability</h1>
-            
-            <div class="status-container">
-                <div class="stats">
-                    <div class="stat-box total">
-                        <div class="label">Total</div>
-                        <div class="value" id="total">0</div>
-                    </div>
-                    <div class="stat-box occupied">
-                        <div class="label">Occupied</div>
-                        <div class="value" id="occupied">0</div>
-                    </div>
-                    <div class="stat-box free">
-                        <div class="label">Free</div>
-                        <div class="value" id="free">0</div>
-                    </div>
-                </div>
+    <!-- Live Status Section -->
+    <section class="status-section">
+        <h2>Parking Status</h2>
+        <div id="live-status" class="live-status">
+            <div class="status-card">
+                <span class="status-number" id="total-spaces">-</span>
+                <span class="status-label">Total Spaces</span>
             </div>
-
-            <div class="parking-grid" id="grid"></div>
+            <div class="status-card available">
+                <span class="status-number" id="available-spaces">-</span>
+                <span class="status-label">Available</span>
+            </div>
+            <div class="status-card occupied">
+                <span class="status-number" id="occupied-spaces">-</span>
+                <span class="status-label">Occupied</span>
+            </div>
         </div>
+        <a href="parking-search.html" class="btn btn-primary btn-large">Find Parking Now</a>
     </section>
 
-    <!-- Booking Form -->
-    <section class="booking-section">
-        <div class="booking-container">
-            <h2 style="color: white; text-align: center;">Book Now</h2>
-            <div class="booking-form">
-                <div class="form-group">
-                    <label style="color: white; font-weight: 600;">SELECT LOCATION</label>
-                    <div class="location-selectors">
-                        <div class="select-wrapper">
-                            <select class="location-select">
-
-                                <option value="" disabled selected>City</option>
-                                <option value="guwahati">Guwahati</option>
-                                <option value="jorhat">Jorhat</option>
-                                <option value="dibrugarh">Dibrugarh</option>
-                            </select>
-                        </div>
-                        <div class="select-wrapper">
-                            <select class="location-select">
-                                <option value="" disabled selected>Area</option>
-                                <option value="downtown">Down-Town Area</option>
-                                <option value="ganeshguri">Ganeshguri</option>
-                                <option value="sixmile">Six Mile</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label style="color: white; font-weight: 600;">CHECK IN</label>
-                    <div class="datetime-input">
-                        <input type="date" class="date-picker">
-                        <select class="time-picker">
-                            <option>09:45 AM</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label style="color: white; font-weight: 600;">CHECK OUT</label>
-
-                    <div class="datetime-input">
-                        <input type="date" class="date-picker">
-                        <select class="time-picker">
-                            <option>09:45 AM</option>
-                        </select>
-                    </div>
-                </div>
-                <button class="btn-search" onclick="searchParking()">SEARCH</button>
+    <!-- Features Section -->
+    <section class="features-section">
+        <h2>Why Choose IntelliPark?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">AI</div>
+                <h3>AI-Powered Detection</h3>
+                <p>Real-time parking space detection using advanced YOLO computer vision technology.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">24/7</div>
+                <h3>24/7 Availability</h3>
+                <p>Book parking spaces anytime, anywhere with our online booking system.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">Rs</div>
+                <h3>Best Rates</h3>
+                <p>Competitive hourly rates with transparent pricing. No hidden charges.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">App</div>
+                <h3>Easy Booking</h3>
+                <p>Simple and fast booking process. Reserve your spot in just a few clicks.</p>
             </div>
         </div>
     </section>
-    
+
+    <!-- How It Works Section -->
+    <section class="how-it-works-section">
+        <h2>How It Works</h2>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3>Search</h3>
+                <p>Find available parking spaces near your destination.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3>Book</h3>
+                <p>Select your preferred spot and time slot.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3>Park</h3>
+                <p>Arrive at the location and park in your reserved spot.</p>
+            </div>
+        </div>
+    </section>
 
     <!-- Footer -->
     <footer class="footer">
@@ -127,37 +119,47 @@
             <div class="footer-brand">
                 <img src="assets/Logo-Long  1.png" alt="IntelliPark Logo">
                 <p>Smart Parking Solutions for Modern Cities</p>
-                <div class="social-links">
-                    <!-- Add social media icons -->
-                </div>
             </div>
             <div class="footer-links">
                 <h3>Organization</h3>
-                <br>
                 <ul>
                     <li><a href="about.html">About Us</a></li>
-                    <li><a href="#">Support</a></li>
                     <li><a href="contact.html">Contact Us</a></li>
-                    <li><a href="index.html">Home</a></li>
+                    <li><a href="parking-search.html">Find Parking</a></li>
                 </ul>
             </div>
             <div class="footer-contact">
                 <h3>Get In Touch</h3>
-                <br>
                 <p>+91 91012-27640</p>
                 <p>+91 876105-5433</p>
-                <br>
-                <p>NH-37, Dept. Of CSE,<br>
-                   Kaziranga University, Jorhat<br>
-                   Assam 8875006</p>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>Copyright 2025 Intelli Park</p>
-            <p>All Rights Reserved.</p>
+            <p>Copyright 2025 IntelliPark. All Rights Reserved.</p>
         </div>
     </footer>
-    
-    <script src="script.js"></script>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // Load parking status on page load
+        async function loadStatus() {
+            try {
+                const response = await api.getParkingStatus();
+                document.getElementById('total-spaces').textContent = response.total;
+                document.getElementById('available-spaces').textContent = response.available;
+                document.getElementById('occupied-spaces').textContent = response.occupied;
+            } catch (error) {
+                console.error('Failed to load status:', error);
+            }
+        }
+
+        // Load status on page load
+        loadStatus();
+
+        // Refresh status every 30 seconds
+        setInterval(loadStatus, 30000);
+    </script>
 </body>
 </html>
