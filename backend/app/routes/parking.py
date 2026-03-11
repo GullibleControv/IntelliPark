@@ -18,6 +18,7 @@ def get_spaces():
         available_only = request.args.get('available', '').lower() == 'true'
         vehicle_type = request.args.get('vehicle_type')
         floor = request.args.get('floor')
+        include_coords = request.args.get('include_coordinates', '').lower() == 'true'
 
         # Build query
         query = ParkingSpace.query.filter_by(is_active=True)
@@ -37,7 +38,7 @@ def get_spaces():
         spaces = query.order_by(ParkingSpace.name).all()
 
         return jsonify({
-            'spaces': [space.to_dict() for space in spaces],
+            'spaces': [space.to_dict(include_coordinates=include_coords) for space in spaces],
             'total': len(spaces)
         })
 

@@ -15,6 +15,11 @@ resize_factor: 0.7
 # 0.1 = 10x slower
 playback_speed: 1.0
 
+# Maximum video duration to download (for testing with long videos)
+# Format: "MM:SS" e.g., "2:00" for 2 minutes
+# Comment out or set to null for full video
+max_video_duration: "2:00"
+
 # Directory to cache downloaded/processed videos
 video_cache_dir: video_cache
 

@@ -103,15 +103,23 @@ class ParkingDetector:
             logger.info(f"Downloading YouTube video: {url}")
 
             # Use yt-dlp to download the video
+            # Check if download sections limit is configured
+            max_duration = self.config.get('max_video_duration', None)
+
             cmd = [
                 'yt-dlp',
                 '-f', 'best[height<=720]',  # Limit to 720p for performance
                 '-o', output_path,
                 '--no-playlist',
-                url
             ]
 
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            # Add duration limit if configured (e.g., "*0:00-2:00" for first 2 minutes)
+            if max_duration:
+                cmd.extend(['--download-sections', f'*0:00-{max_duration}'])
+
+            cmd.append(url)
+
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=1800)  # 30 min timeout
 
             if result.returncode != 0:
                 logger.error(f"yt-dlp error: {result.stderr}")
@@ -268,7 +276,7 @@ class ParkingDetector:
         """Load parking spaces from the API."""
         try:
             response = requests.get(
-                f"{self.api_url}/api/parking/spaces",
+                f"{self.api_url}/api/parking/spaces?include_coordinates=true",
                 timeout=10
             )
             response.raise_for_status()
