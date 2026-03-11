@@ -12,6 +12,10 @@ import logging
 import requests
 import time
 import sys
+import os
+import subprocess
+import tempfile
+import shutil
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional
 
@@ -74,8 +78,170 @@ class ParkingDetector:
             'resize_factor': 0.7,
             'api_url': 'http://localhost:5000',
             'vehicle_classes': [2, 3, 5, 7],  # car, motorcycle, bus, truck
-            'log_level': 'INFO'
+            'log_level': 'INFO',
+            'playback_speed': 1.0,  # 0.25 = 4x slower, 0.5 = 2x slower
+            'video_cache_dir': 'video_cache'
         }
+
+    def is_youtube_url(self, url: str) -> bool:
+        """Check if the URL is a YouTube URL."""
+        youtube_patterns = ['youtube.com/watch', 'youtu.be/', 'youtube.com/live']
+        return any(pattern in str(url) for pattern in youtube_patterns)
+
+    def download_youtube_video(self, url: str, output_path: str) -> bool:
+        """
+        Download a YouTube video using yt-dlp.
+
+        Args:
+            url: YouTube video URL
+            output_path: Path to save the downloaded video
+
+        Returns:
+            True if download successful
+        """
+        try:
+            logger.info(f"Downloading YouTube video: {url}")
+
+            # Use yt-dlp to download the video
+            cmd = [
+                'yt-dlp',
+                '-f', 'best[height<=720]',  # Limit to 720p for performance
+                '-o', output_path,
+                '--no-playlist',
+                url
+            ]
+
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+
+            if result.returncode != 0:
+                logger.error(f"yt-dlp error: {result.stderr}")
+                return False
+
+            logger.info(f"Video downloaded to: {output_path}")
+            return True
+
+        except subprocess.TimeoutExpired:
+            logger.error("Video download timed out")
+            return False
+        except FileNotFoundError:
+            logger.error("yt-dlp not found. Install with: pip install yt-dlp")
+            return False
+        except Exception as e:
+            logger.error(f"Failed to download video: {e}")
+            return False
+
+    def slowdown_video(self, input_path: str, output_path: str, speed: float) -> bool:
+        """
+        Slow down a video using ffmpeg.
+
+        Args:
+            input_path: Path to input video
+            output_path: Path to save slowed video
+            speed: Playback speed (0.25 = 4x slower, 0.5 = 2x slower)
+
+        Returns:
+            True if successful
+        """
+        if speed >= 1.0:
+            # No slowdown needed, just copy
+            shutil.copy(input_path, output_path)
+            return True
+
+        try:
+            logger.info(f"Slowing down video to {speed}x speed...")
+
+            # Calculate PTS multiplier (inverse of speed)
+            pts_multiplier = 1.0 / speed
+
+            # Use ffmpeg to slow down the video
+            # setpts filter changes presentation timestamps
+            cmd = [
+                'ffmpeg',
+                '-i', input_path,
+                '-filter:v', f'setpts={pts_multiplier}*PTS',
+                '-an',  # Remove audio (not needed for detection)
+                '-y',  # Overwrite output
+                output_path
+            ]
+
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+
+            if result.returncode != 0:
+                logger.error(f"ffmpeg error: {result.stderr}")
+                return False
+
+            logger.info(f"Video slowed down successfully: {output_path}")
+            return True
+
+        except subprocess.TimeoutExpired:
+            logger.error("Video processing timed out")
+            return False
+        except FileNotFoundError:
+            logger.error("ffmpeg not found. Please install ffmpeg.")
+            return False
+        except Exception as e:
+            logger.error(f"Failed to slow down video: {e}")
+            return False
+
+    def prepare_video_source(self, source: str, speed: float = None) -> str:
+        """
+        Prepare video source for detection.
+
+        For YouTube URLs, downloads and optionally slows down the video.
+        For local files, optionally slows them down.
+        For other sources (webcam, RTSP), returns as-is.
+
+        Args:
+            source: Video source (URL, file path, or device index)
+            speed: Playback speed override (uses config if not specified)
+
+        Returns:
+            Path to prepared video file or original source
+        """
+        if speed is None:
+            speed = self.config.get('playback_speed', 1.0)
+
+        # If it's a webcam or RTSP stream, return as-is
+        if isinstance(source, int) or source.startswith('rtsp://'):
+            if speed != 1.0:
+                logger.warning("Speed adjustment not supported for live streams")
+            return source
+
+        # Create cache directory
+        cache_dir = Path(self.config.get('video_cache_dir', 'video_cache'))
+        cache_dir.mkdir(exist_ok=True)
+
+        # Generate cache filename from URL/path
+        import hashlib
+        source_hash = hashlib.md5(source.encode()).hexdigest()[:12]
+
+        if self.is_youtube_url(source):
+            # Download YouTube video
+            downloaded_path = cache_dir / f"yt_{source_hash}.mp4"
+
+            if not downloaded_path.exists():
+                if not self.download_youtube_video(source, str(downloaded_path)):
+                    logger.error("Failed to download YouTube video")
+                    return source  # Return original URL as fallback
+            else:
+                logger.info(f"Using cached video: {downloaded_path}")
+
+            source = str(downloaded_path)
+
+        # Apply slowdown if needed
+        if speed < 1.0:
+            slowed_path = cache_dir / f"slowed_{speed}x_{source_hash}.mp4"
+
+            if not slowed_path.exists():
+                if not self.slowdown_video(source, str(slowed_path), speed):
+                    logger.error("Failed to slow down video, using original")
+                    return source
+            else:
+                logger.info(f"Using cached slowed video: {slowed_path}")
+
+            return str(slowed_path)
+
+        return source
 
     def _init_model(self):
         """Initialize the YOLO model."""
@@ -299,15 +465,22 @@ class ParkingDetector:
 
         return vehicles, occupancy
 
-    def run(self, video_source=0, display: bool = True):
+    def run(self, video_source=0, display: bool = True, speed: float = None):
         """
         Run the detection loop.
 
         Args:
             video_source: Video source (0 for webcam, URL for stream, or file path)
             display: Whether to display the video with overlays
+            speed: Playback speed (0.25 = 4x slower, 0.5 = 2x slower, 1.0 = normal)
         """
         logger.info(f"Starting detection with source: {video_source}")
+
+        # Prepare video source (download YouTube, apply slowdown if needed)
+        prepared_source = self.prepare_video_source(video_source, speed)
+        if prepared_source != video_source:
+            logger.info(f"Using prepared video: {prepared_source}")
+            video_source = prepared_source
 
         # Load parking spaces
         if not self.load_spaces_from_api():
@@ -380,19 +553,48 @@ def main():
     """Main entry point."""
     import argparse
 
-    parser = argparse.ArgumentParser(description='IntelliPark Parking Detection')
+    parser = argparse.ArgumentParser(
+        description='IntelliPark Parking Detection',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Run with webcam
+  python detector.py --source 0
+
+  # Run with YouTube video (auto-download)
+  python detector.py --source "https://www.youtube.com/watch?v=VIDEO_ID"
+
+  # Run with YouTube video slowed to 0.25x (4x slower)
+  python detector.py --source "https://www.youtube.com/watch?v=VIDEO_ID" --speed 0.25
+
+  # Run with local video file
+  python detector.py --source path/to/video.mp4
+
+  # Run with RTSP stream
+  python detector.py --source "rtsp://camera_ip:port/stream"
+        """
+    )
     parser.add_argument('--config', '-c', default='config.yaml', help='Config file path')
-    parser.add_argument('--source', '-s', default='0', help='Video source (0 for webcam, URL, or file)')
-    parser.add_argument('--no-display', action='store_true', help='Run without display')
+    parser.add_argument('--source', '-s', default='0', help='Video source (0 for webcam, YouTube URL, file path, or RTSP stream)')
+    parser.add_argument('--speed', type=float, default=None, help='Playback speed (0.25 = 4x slower, 0.5 = 2x slower, 1.0 = normal)')
+    parser.add_argument('--no-display', action='store_true', help='Run without display (headless mode)')
+    parser.add_argument('--clear-cache', action='store_true', help='Clear video cache before running')
 
     args = parser.parse_args()
+
+    # Clear cache if requested
+    if args.clear_cache:
+        cache_dir = Path('video_cache')
+        if cache_dir.exists():
+            shutil.rmtree(cache_dir)
+            logger.info("Video cache cleared")
 
     # Convert source to int if it's a number (webcam index)
     source = int(args.source) if args.source.isdigit() else args.source
 
     # Create detector and run
     detector = ParkingDetector(config_path=args.config)
-    detector.run(video_source=source, display=not args.no_display)
+    detector.run(video_source=source, display=not args.no_display, speed=args.speed)
 
 
 if __name__ == '__main__':

@@ -8,6 +8,16 @@ confidence: 0.5
 skip_frames: 2
 resize_factor: 0.7
 
+# Video Slowdown (for timelapse videos)
+# 1.0 = normal speed
+# 0.5 = 2x slower
+# 0.25 = 4x slower (recommended for timelapse)
+# 0.1 = 10x slower
+playback_speed: 1.0
+
+# Directory to cache downloaded/processed videos
+video_cache_dir: video_cache
+
 # API Connection
 api_url: http://localhost:5000
 
