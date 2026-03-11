@@ -9,7 +9,7 @@ services:
     container_name: intellipark-db
     environment:
       POSTGRES_USER: intellipark
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-intellipark_dev}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
       POSTGRES_DB: intellipark
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -29,8 +29,8 @@ services:
       dockerfile: Dockerfile
     container_name: intellipark-backend
     environment:
-      - DATABASE_URL=postgresql://intellipark:${DB_PASSWORD:-intellipark_dev}@db:5432/intellipark
-      - SECRET_KEY=${SECRET_KEY:-change-this-in-production}
+      - DATABASE_URL=postgresql://intellipark:${DB_PASSWORD}@db:5432/intellipark
+      - SECRET_KEY=${SECRET_KEY}
       - JWT_EXPIRATION_HOURS=24
       - CORS_ORIGINS=http://localhost:8080,http://localhost:3000
       - FLASK_ENV=${FLASK_ENV:-production}

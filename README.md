@@ -24,11 +24,17 @@ AI-powered parking space detection and management system using YOLO computer vis
 git clone https://github.com/YOUR_USERNAME/IntelliPark.git
 cd IntelliPark
 
+# Create environment file (required)
+cp .env.example .env
+# Edit .env and set:
+# - DB_PASSWORD: Your database password
+# - SECRET_KEY: Generate with: python -c "import secrets; print(secrets.token_hex(32))"
+
 # Start all services
 docker-compose up --build
 
 # Access the application
-# Frontend: http://localhost:8000
+# Frontend: http://localhost:8080
 # Backend API: http://localhost:5000
 ```
 

@@ -7,8 +7,10 @@ load_dotenv()
 class Config:
     """Application configuration loaded from environment variables."""
 
-    # Security
-    SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-change-in-production')
+    # Security - SECRET_KEY must be set in environment
+    SECRET_KEY = os.getenv('SECRET_KEY')
+    if not SECRET_KEY:
+        raise ValueError("SECRET_KEY environment variable is required")
     JWT_EXPIRATION_HOURS = int(os.getenv('JWT_EXPIRATION_HOURS', 24))
 
     # Database
