@@ -1,0 +1,25 @@
+# Web Framework
+flask==3.0.0
+flask-cors==4.0.0
+flask-sqlalchemy==3.1.1
+
+# Authentication
+pyjwt==2.8.0
+bcrypt==4.1.2
+
+# Environment
+python-dotenv==1.0.0
+
+# Database (PostgreSQL for production)
+psycopg2-binary==2.9.9
+
+# Validation
+email-validator==2.1.0
+
+# Production server
+gunicorn==21.2.0
+
+# Detection dependencies (install separately if running detection)
+# ultralytics==8.1.0
+# opencv-python==4.9.0.80
+# yt-dlp==2024.1.0

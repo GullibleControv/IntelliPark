@@ -1,0 +1,23 @@
+# IntelliPark Detection Configuration
+
+# YOLO Model Settings
+model_path: models/yolo11s.pt
+confidence: 0.5
+
+# Video Processing
+skip_frames: 2
+resize_factor: 0.7
+
+# API Connection
+api_url: http://localhost:5000
+
+# Vehicle Detection Classes (COCO dataset)
+# 2 = car, 5 = bus, 7 = truck, 3 = motorcycle
+vehicle_classes:
+  - 2  # car
+  - 3  # motorcycle
+  - 5  # bus
+  - 7  # truck
+
+# Logging
+log_level: INFO
