@@ -20,7 +20,7 @@ class AuthManager {
      * Check if current page requires authentication
      */
     checkProtectedPage() {
-        const protectedPages = ['profile.html', 'bookings.html'];
+        const protectedPages = ['profile.html', 'bookings.html', 'admin.html'];
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
 
         if (protectedPages.includes(currentPage) && !api.isAuthenticated()) {

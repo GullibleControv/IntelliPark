@@ -33,10 +33,12 @@ def create_app(config_class=Config):
     from app.routes.auth import auth_bp
     from app.routes.parking import parking_bp
     from app.routes.booking import booking_bp
+    from app.routes.admin import admin_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(parking_bp)
     app.register_blueprint(booking_bp)
+    app.register_blueprint(admin_bp)
 
     # Health check endpoint
     @app.route('/api/health', methods=['GET'])

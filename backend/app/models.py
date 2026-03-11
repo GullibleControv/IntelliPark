@@ -100,6 +100,34 @@ class Booking(db.Model):
         }
 
 
+class VideoSource(db.Model):
+    """Video source configuration for detection system."""
+
+    __tablename__ = 'video_sources'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    url = db.Column(db.String(500), nullable=False)
+    location = db.Column(db.String(100), nullable=False)
+    frame_width = db.Column(db.Integer, nullable=True)
+    frame_height = db.Column(db.Integer, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'url': self.url,
+            'location': self.location,
+            'frame_width': self.frame_width,
+            'frame_height': self.frame_height,
+            'is_active': self.is_active,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
+
+
 class OccupancyLog(db.Model):
     """Log of occupancy changes for analytics."""
 

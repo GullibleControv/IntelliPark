@@ -19,7 +19,6 @@ email-validator==2.1.0
 # Production server
 gunicorn==21.2.0
 
-# Detection dependencies (install separately if running detection)
-# ultralytics==8.1.0
-# opencv-python==4.9.0.80
-# yt-dlp==2024.1.0
+# Admin panel dependencies (frame extraction)
+opencv-python>=4.9.0
+yt-dlp>=2024.1.0

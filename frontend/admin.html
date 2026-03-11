@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - IntelliPark</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/additional.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">
+            <a href="index.html">
+                <img src="assets/Logo-Short 1.png" alt="IntelliPark Logo">
+            </a>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="parking-search.html">Find Parking</a>
+            <a href="admin.html" class="active">Admin</a>
+        </div>
+        <div id="auth-nav" class="auth-buttons">
+            <a href="login.html" class="btn btn-login">Login</a>
+            <a href="register.html" class="btn btn-register">Register</a>
+        </div>
+    </nav>
+
+    <!-- Admin Section -->
+    <section class="admin-section">
+        <div class="admin-container">
+            <h1>Parking Space Configuration</h1>
+
+            <!-- Messages -->
+            <div id="error-message" class="error-message" style="display: none;"></div>
+            <div id="success-message" class="success-message" style="display: none;"></div>
+
+            <!-- Step 1: Video Source -->
+            <div class="admin-card" id="step-video">
+                <h2>Step 1: Video Source</h2>
+                <p class="step-description">Enter a YouTube parking lot video URL to capture a frame for drawing parking spaces.</p>
+                <div class="form-group">
+                    <label for="youtube-url">YouTube Video URL</label>
+                    <input type="url" id="youtube-url"
+                           placeholder="https://www.youtube.com/watch?v=..."
+                           class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="location-name">Location Name</label>
+                    <input type="text" id="location-name"
+                           placeholder="e.g., Main Street Parking"
+                           class="form-input">
+                </div>
+                <button id="btn-extract-frame" class="btn btn-primary">
+                    Extract Frame
+                </button>
+            </div>
+
+            <!-- Step 2: Draw Polygons -->
+            <div class="admin-card" id="step-draw" style="display: none;">
+                <h2>Step 2: Draw Parking Spaces</h2>
+                <div class="drawing-instructions">
+                    <p><strong>Instructions:</strong></p>
+                    <ul>
+                        <li>Click on the image to add polygon points</li>
+                        <li>Press <kbd>Enter</kbd> or double-click to complete a polygon</li>
+                        <li>Press <kbd>Escape</kbd> to cancel current polygon</li>
+                        <li>Click on existing polygons to select them</li>
+                        <li>Press <kbd>Delete</kbd> to remove selected polygon</li>
+                    </ul>
+                </div>
+
+                <div class="canvas-toolbar">
+                    <button id="btn-undo" class="btn btn-outline" disabled>Undo Point</button>
+                    <button id="btn-clear-current" class="btn btn-outline" disabled>Clear Current</button>
+                    <button id="btn-delete-selected" class="btn btn-outline" disabled>Delete Selected</button>
+                    <span class="space-count">Spaces: <span id="polygon-count">0</span></span>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="drawing-canvas"></canvas>
+                </div>
+
+                <div class="canvas-actions">
+                    <button id="btn-back" class="btn btn-outline">Back</button>
+                    <button id="btn-save-spaces" class="btn btn-primary" disabled>
+                        Save Parking Spaces
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Manage Spaces -->
+            <div class="admin-card" id="step-manage">
+                <h2>Existing Parking Spaces</h2>
+                <div class="spaces-filter">
+                    <select id="filter-location" class="form-select">
+                        <option value="">All Locations</option>
+                    </select>
+                    <button id="btn-refresh-spaces" class="btn btn-outline">Refresh</button>
+                </div>
+                <div id="spaces-list" class="spaces-list">
+                    <p class="empty-state">Loading parking spaces...</p>
+                </div>
+            </div>
+
+            <!-- Detection Control -->
+            <div class="admin-card" id="step-detection">
+                <h2>Detection Control</h2>
+                <p class="step-description">Configure and start the detection system for a video source.</p>
+                <div class="detection-actions">
+                    <select id="select-source" class="form-select">
+                        <option value="">Select Video Source</option>
+                    </select>
+                    <button id="btn-get-config" class="btn btn-primary" disabled>
+                        Get Detection Command
+                    </button>
+                </div>
+                <div id="detection-command" class="detection-command" style="display: none;">
+                    <p>Run this command in the detection folder:</p>
+                    <code id="command-text"></code>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <img src="assets/Logo-Long  1.png" alt="IntelliPark Logo">
+                <p>Smart Parking Solutions for Modern Cities</p>
+            </div>
+            <div class="footer-links">
+                <h3>Organization</h3>
+                <ul>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="parking-search.html">Find Parking</a></li>
+                </ul>
+            </div>
+            <div class="footer-contact">
+                <h3>Get In Touch</h3>
+                <p>+91 91012-27640</p>
+                <p>+91 876105-5433</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>Copyright 2025 IntelliPark. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/polygon-drawer.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
