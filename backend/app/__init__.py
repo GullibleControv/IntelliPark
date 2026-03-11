@@ -1,9 +1,11 @@
+import os
 import logging
 from flask import Flask, jsonify
 from flask_cors import CORS
 
 from app.config import Config
-from app.models import db
+from app.models import db, User
+from app.utils.auth import hash_password
 
 # Configure logging
 logging.basicConfig(
@@ -63,11 +65,33 @@ def create_app(config_class=Config):
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-    # Create database tables
+    # Create database tables and seed admin user
     with app.app_context():
         db.create_all()
         logger.info("Database tables created/verified")
 
+        # Seed default admin user if not exists
+        seed_admin_user()
+
     logger.info("IntelliPark API initialized successfully")
 
     return app
+
+
+def seed_admin_user():
+    """Create default admin user if it doesn't exist."""
+    admin_email = os.getenv('ADMIN_EMAIL', 'admin@intellipark.com')
+    admin_password = os.getenv('ADMIN_PASSWORD', 'Admin@123')
+    admin_name = os.getenv('ADMIN_NAME', 'Admin')
+
+    existing_admin = User.query.filter_by(email=admin_email).first()
+
+    if not existing_admin:
+        admin = User(
+            email=admin_email,
+            password_hash=hash_password(admin_password),
+            name=admin_name
+        )
+        db.session.add(admin)
+        db.session.commit()
+        logger.info(f"Default admin user created: {admin_email}")
