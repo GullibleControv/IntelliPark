@@ -20,5 +20,5 @@ email-validator==2.1.0
 gunicorn==21.2.0
 
 # Admin panel dependencies (frame extraction)
-opencv-python>=4.9.0
+opencv-python-headless>=4.9.0
 yt-dlp>=2024.1.0
