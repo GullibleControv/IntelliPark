@@ -1,0 +1,16 @@
+# IntelliPark Detection Requirements
+
+# YOLO and Computer Vision
+ultralytics>=8.1.0
+opencv-python>=4.9.0
+
+# Configuration
+pyyaml>=6.0
+
+# HTTP requests to API
+requests>=2.31.0
+
+# Video stream extraction (optional, for YouTube streams)
+# yt-dlp>=2024.1.0
+
+# Note: torch, torchvision are installed automatically with ultralytics
