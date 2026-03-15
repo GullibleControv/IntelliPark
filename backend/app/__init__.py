@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, jsonify
+from flask import Flask, jsonify, g
 from flask_cors import CORS
 
 from app.config import Config
@@ -17,6 +17,9 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+# Track if database has been initialized
+_db_initialized = False
 
 
 def create_app(config_class=Config):
@@ -50,6 +53,30 @@ def create_app(config_class=Config):
             'service': 'IntelliPark API'
         })
 
+    # Database initialization endpoint (call once after deploy)
+    @app.route('/api/init-db', methods=['POST'])
+    def init_database():
+        try:
+            db.create_all()
+            seed_admin_user()
+            return jsonify({'status': 'Database initialized successfully'})
+        except Exception as e:
+            logger.error(f"Database initialization failed: {e}")
+            return jsonify({'error': str(e)}), 500
+
+    # Initialize database on first request (lazy initialization)
+    @app.before_request
+    def initialize_database():
+        global _db_initialized
+        if not _db_initialized:
+            try:
+                db.create_all()
+                seed_admin_user()
+                _db_initialized = True
+                logger.info("Database tables created/verified on first request")
+            except Exception as e:
+                logger.warning(f"Database initialization deferred: {e}")
+
     # Error handlers
     @app.errorhandler(404)
     def not_found(error):
@@ -62,16 +89,11 @@ def create_app(config_class=Config):
     @app.errorhandler(500)
     def internal_error(error):
         logger.error(f"Internal server error: {error}")
-        db.session.rollback()
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
         return jsonify({'error': 'Internal server error'}), 500
-
-    # Create database tables and seed admin user
-    with app.app_context():
-        db.create_all()
-        logger.info("Database tables created/verified")
-
-        # Seed default admin user if not exists
-        seed_admin_user()
 
     logger.info("IntelliPark API initialized successfully")
 
@@ -84,14 +106,17 @@ def seed_admin_user():
     admin_password = os.getenv('ADMIN_PASSWORD', 'Admin@123')
     admin_name = os.getenv('ADMIN_NAME', 'Admin')
 
-    existing_admin = User.query.filter_by(email=admin_email).first()
+    try:
+        existing_admin = User.query.filter_by(email=admin_email).first()
 
-    if not existing_admin:
-        admin = User(
-            email=admin_email,
-            password_hash=hash_password(admin_password),
-            name=admin_name
-        )
-        db.session.add(admin)
-        db.session.commit()
-        logger.info(f"Default admin user created: {admin_email}")
+        if not existing_admin:
+            admin = User(
+                email=admin_email,
+                password_hash=hash_password(admin_password),
+                name=admin_name
+            )
+            db.session.add(admin)
+            db.session.commit()
+            logger.info(f"Default admin user created: {admin_email}")
+    except Exception as e:
+        logger.warning(f"Admin seeding skipped: {e}")
