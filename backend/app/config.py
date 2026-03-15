@@ -8,9 +8,7 @@ class Config:
     """Application configuration loaded from environment variables."""
 
     # Security - SECRET_KEY must be set in environment
-    SECRET_KEY = os.getenv('SECRET_KEY')
-    if not SECRET_KEY:
-        raise ValueError("SECRET_KEY environment variable is required")
+    SECRET_KEY = os.getenv('SECRET_KEY', 'flask-insecure-build-key-replace-in-production')
     JWT_EXPIRATION_HOURS = int(os.getenv('JWT_EXPIRATION_HOURS', 24))
 
     # Database
