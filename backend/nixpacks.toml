@@ -1,8 +1,7 @@
 # Railway/Nixpacks build configuration for IntelliPark
 
 [phases.setup]
-# Include system libraries needed for opencv-python-headless
-nixPkgs = ["python311", "postgresql", "libGL", "glib"]
+nixPkgs = ["python311", "postgresql"]
 
 [phases.install]
 cmds = ["pip install --upgrade pip", "pip install -r requirements.txt"]

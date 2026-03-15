@@ -19,6 +19,5 @@ email-validator==2.1.0
 # Production server
 gunicorn==21.2.0
 
-# Admin panel dependencies (frame extraction)
-opencv-python-headless>=4.9.0
-yt-dlp>=2024.1.0
+# Note: opencv-python-headless and yt-dlp removed for cloud deployment
+# These can be added later for local admin panel features
