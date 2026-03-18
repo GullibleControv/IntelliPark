@@ -1,12 +1,30 @@
 from flask import Blueprint, request, jsonify
 import logging
+import re
 
 from app.models import db, ParkingSpace, OccupancyLog
 from app.utils.auth import token_required, optional_token
+from app.services.websocket import emit_space_update, emit_occupancy_summary
 
 logger = logging.getLogger(__name__)
 
 parking_bp = Blueprint('parking', __name__, url_prefix='/api/parking')
+
+
+def sanitize_like_pattern(value: str) -> str:
+    """
+    Sanitize input for use in LIKE/ILIKE patterns.
+    Escapes SQL wildcards to prevent pattern injection.
+    """
+    if not value:
+        return value
+    # Escape SQL LIKE special characters
+    value = value.replace('\\', '\\\\')  # Escape backslashes first
+    value = value.replace('%', '\\%')
+    value = value.replace('_', '\\_')
+    # Remove any other potentially dangerous characters
+    value = re.sub(r'[;\'"\\x00-\\x1f]', '', value)
+    return value
 
 
 @parking_bp.route('/spaces', methods=['GET'])
@@ -24,7 +42,9 @@ def get_spaces():
         query = ParkingSpace.query.filter_by(is_active=True)
 
         if location:
-            query = query.filter(ParkingSpace.location.ilike(f'%{location}%'))
+            # SECURITY: Sanitize input to prevent SQL injection via LIKE patterns
+            safe_location = sanitize_like_pattern(location)
+            query = query.filter(ParkingSpace.location.ilike(f'%{safe_location}%', escape='\\'))
 
         if available_only:
             query = query.filter_by(is_occupied=False)
@@ -213,15 +233,29 @@ def update_space_status(space_id):
         # Only update and log if status changed
         if old_status != new_status:
             space.is_occupied = new_status
+            confidence = data.get('confidence')
 
             # Log the change
             log_entry = OccupancyLog(
                 space_id=space_id,
                 is_occupied=new_status,
-                confidence=data.get('confidence')
+                confidence=confidence
             )
             db.session.add(log_entry)
             db.session.commit()
+
+            # Emit real-time update via WebSocket
+            try:
+                emit_space_update(
+                    space_id=space_id,
+                    is_occupied=new_status,
+                    confidence=confidence,
+                    location=space.location
+                )
+                # Also emit updated occupancy summary
+                emit_occupancy_summary(location=space.location)
+            except Exception as ws_error:
+                logger.warning(f"WebSocket emit failed: {ws_error}")
 
             logger.debug(f"Space {space.name} status changed: {old_status} -> {new_status}")
 
@@ -242,7 +276,9 @@ def get_overall_status():
         query = ParkingSpace.query.filter_by(is_active=True)
 
         if location:
-            query = query.filter(ParkingSpace.location.ilike(f'%{location}%'))
+            # SECURITY: Sanitize input to prevent SQL injection via LIKE patterns
+            safe_location = sanitize_like_pattern(location)
+            query = query.filter(ParkingSpace.location.ilike(f'%{safe_location}%', escape='\\'))
 
         spaces = query.all()
 

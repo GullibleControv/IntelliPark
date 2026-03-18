@@ -79,3 +79,38 @@ def optional_token(f):
         return f(*args, **kwargs)
 
     return decorated
+
+
+def admin_required(f):
+    """Decorator to require admin privileges for protected routes."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        # Import here to avoid circular imports
+        from app.models import User
+
+        auth_header = request.headers.get('Authorization', '')
+
+        if not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'Missing or invalid authorization header'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+
+        if not token:
+            return jsonify({'error': 'Token required'}), 401
+
+        payload = decode_token(token)
+        if not payload:
+            return jsonify({'error': 'Invalid or expired token'}), 401
+
+        user = User.query.get(payload['user_id'])
+        if not user:
+            return jsonify({'error': 'User not found'}), 401
+
+        if not user.is_admin:
+            return jsonify({'error': 'Admin access required'}), 403
+
+        request.user_id = payload['user_id']
+        request.current_user = user
+        return f(*args, **kwargs)
+
+    return decorated

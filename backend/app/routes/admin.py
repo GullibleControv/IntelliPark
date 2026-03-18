@@ -6,22 +6,81 @@ from flask import Blueprint, request, jsonify
 import subprocess
 import base64
 import logging
+import re
+from urllib.parse import urlparse
 
 from app.models import db, ParkingSpace, VideoSource
-from app.utils.auth import token_required
+from app.utils.auth import admin_required
 
 logger = logging.getLogger(__name__)
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/api/admin')
 
 
+def validate_youtube_url(url: str) -> bool:
+    """
+    Validate that a URL is a legitimate YouTube URL.
+    Prevents command injection by strictly validating URL format.
+    """
+    if not url or not isinstance(url, str):
+        return False
+
+    # Parse the URL
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return False
+
+    # Whitelist YouTube domains
+    allowed_hosts = [
+        'youtube.com',
+        'www.youtube.com',
+        'm.youtube.com',
+        'youtu.be',
+        'www.youtu.be'
+    ]
+
+    if parsed.netloc not in allowed_hosts:
+        return False
+
+    # Must be HTTPS
+    if parsed.scheme not in ['http', 'https']:
+        return False
+
+    # Check for shell metacharacters (defense in depth)
+    dangerous_chars = [';', '|', '&', '$', '`', '(', ')', '{', '}', '<', '>', '\n', '\r']
+    if any(char in url for char in dangerous_chars):
+        return False
+
+    # Validate video ID pattern for youtube.com/watch?v=
+    if 'youtube.com' in parsed.netloc:
+        video_id_pattern = r'^[a-zA-Z0-9_-]{11}$'
+        # Extract video ID from query params
+        from urllib.parse import parse_qs
+        query_params = parse_qs(parsed.query)
+        video_id = query_params.get('v', [None])[0]
+        if video_id and not re.match(video_id_pattern, video_id):
+            return False
+
+    # Validate youtu.be short URL format
+    if 'youtu.be' in parsed.netloc:
+        video_id_pattern = r'^/[a-zA-Z0-9_-]{11}$'
+        if not re.match(video_id_pattern, parsed.path):
+            return False
+
+    return True
+
+
 @admin_bp.route('/extract-frame', methods=['POST'])
-@token_required
+@admin_required
 def extract_frame():
     """
     Extract a frame from a YouTube video URL.
     Uses yt-dlp to get stream URL, then OpenCV to capture frame.
     Returns the frame as a base64 encoded JPEG.
+
+    Security: Only admin users can access this endpoint.
+    URL validation prevents command injection.
     """
     try:
         import cv2
@@ -34,13 +93,20 @@ def extract_frame():
     if not youtube_url:
         return jsonify({'error': 'YouTube URL is required'}), 400
 
+    # SECURITY: Validate URL to prevent command injection
+    if not validate_youtube_url(youtube_url):
+        logger.warning(f"Invalid YouTube URL rejected: {youtube_url[:100]}")
+        return jsonify({'error': 'Invalid YouTube URL. Only youtube.com and youtu.be URLs are allowed.'}), 400
+
     try:
         # Use yt-dlp to get the direct video stream URL
+        # SECURITY: URL is validated above, and we use list arguments (not shell=True)
         result = subprocess.run(
             ['yt-dlp', '-f', 'best[height<=720]', '-g', youtube_url],
             capture_output=True,
             text=True,
-            timeout=60
+            timeout=60,
+            shell=False  # Explicit: never use shell
         )
 
         if result.returncode != 0:
@@ -86,11 +152,12 @@ def extract_frame():
         return jsonify({'error': 'yt-dlp not installed. Run: pip install yt-dlp'}), 500
     except Exception as e:
         logger.error(f"Frame extraction error: {e}")
-        return jsonify({'error': str(e)}), 500
+        # SECURITY: Don't leak internal error details to client
+        return jsonify({'error': 'Frame extraction failed. Please try again.'}), 500
 
 
 @admin_bp.route('/video-sources', methods=['POST'])
-@token_required
+@admin_required
 def create_video_source():
     """Create a new video source configuration."""
     data = request.get_json()
@@ -117,7 +184,7 @@ def create_video_source():
 
 
 @admin_bp.route('/video-sources', methods=['GET'])
-@token_required
+@admin_required
 def get_video_sources():
     """Get all video sources."""
     sources = VideoSource.query.filter_by(is_active=True).all()
@@ -127,7 +194,7 @@ def get_video_sources():
 
 
 @admin_bp.route('/video-sources/<int:source_id>', methods=['DELETE'])
-@token_required
+@admin_required
 def delete_video_source(source_id):
     """Delete a video source."""
     source = VideoSource.query.get_or_404(source_id)
@@ -137,7 +204,7 @@ def delete_video_source(source_id):
 
 
 @admin_bp.route('/spaces-with-coordinates', methods=['GET'])
-@token_required
+@admin_required
 def get_spaces_with_coordinates():
     """Get all parking spaces with their coordinates for editing."""
     location = request.args.get('location')
@@ -154,7 +221,7 @@ def get_spaces_with_coordinates():
 
 
 @admin_bp.route('/spaces/bulk', methods=['POST'])
-@token_required
+@admin_required
 def create_bulk_spaces():
     """Create multiple parking spaces at once (from polygon drawing session)."""
     data = request.get_json()
@@ -192,7 +259,7 @@ def create_bulk_spaces():
 
 
 @admin_bp.route('/detection/config', methods=['GET'])
-@token_required
+@admin_required
 def get_detection_config():
     """Get detection configuration for a video source."""
     source_id = request.args.get('source_id', type=int)
