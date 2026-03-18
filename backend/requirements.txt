@@ -3,6 +3,23 @@ flask==3.0.0
 flask-cors==4.0.0
 flask-sqlalchemy==3.1.1
 
+# Database migrations
+flask-migrate==4.0.5
+
+# Rate limiting
+flask-limiter==3.5.0
+
+# Real-time WebSocket support
+flask-socketio==5.3.6
+python-socketio==5.10.0
+python-engineio==4.8.1
+
+# Email notifications
+flask-mail==0.10.0
+
+# Payment processing
+stripe==7.0.0
+
 # Authentication
 pyjwt==2.8.0
 bcrypt==4.1.2
@@ -16,5 +33,9 @@ psycopg2-binary==2.9.9
 # Validation
 email-validator==2.1.0
 
+# Background tasks
+apscheduler==3.10.4
+
 # Production server
 gunicorn==21.2.0
+eventlet==0.35.1

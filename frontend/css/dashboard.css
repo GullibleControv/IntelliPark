@@ -1,0 +1,501 @@
+/* Dashboard Styles */
+
+.dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+    color: #e94560;
+    font-size: 2rem;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #1a1a2e;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.status-dot.connected {
+    background: #00ff88;
+    box-shadow: 0 0 10px #00ff88;
+}
+
+.status-dot.disconnected {
+    background: #ff4444;
+    box-shadow: 0 0 10px #ff4444;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: linear-gradient(145deg, #1a1a2e, #16213e);
+    border-radius: 15px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid #0f3460;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(233, 69, 96, 0.2);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+}
+
+.stat-content h3 {
+    color: #888;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #fff;
+}
+
+.stat-card.available .stat-value {
+    color: #00ff88;
+}
+
+.stat-card.occupied .stat-value {
+    color: #e94560;
+}
+
+.stat-card.rate .stat-value {
+    color: #ffd700;
+}
+
+/* Occupancy Bar */
+.occupancy-bar-section {
+    background: #1a1a2e;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.occupancy-bar-section h2 {
+    margin-bottom: 1rem;
+    color: #e94560;
+}
+
+.occupancy-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.occupancy-bar {
+    flex: 1;
+    height: 30px;
+    background: #0f3460;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.occupancy-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00ff88, #ffd700, #e94560);
+    background-size: 200% 100%;
+    border-radius: 15px;
+    transition: width 0.5s ease-out;
+}
+
+.occupancy-label {
+    font-size: 1.2rem;
+    font-weight: bold;
+    min-width: 120px;
+    text-align: right;
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Parking Map */
+.parking-map-section {
+    background: #1a1a2e;
+    border-radius: 15px;
+    padding: 1.5rem;
+}
+
+.parking-map-section h2 {
+    color: #e94560;
+    margin-bottom: 1rem;
+}
+
+.map-legend {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #0f3460;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.dot.available {
+    background: #00ff88;
+    box-shadow: 0 0 8px #00ff88;
+}
+
+.dot.occupied {
+    background: #e94560;
+    box-shadow: 0 0 8px #e94560;
+}
+
+.parking-map {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 1rem;
+    min-height: 200px;
+}
+
+.parking-space {
+    aspect-ratio: 1.5;
+    background: #0f3460;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    transition: all 0.3s;
+    cursor: pointer;
+    border: 2px solid transparent;
+}
+
+.parking-space:hover {
+    transform: scale(1.05);
+}
+
+.parking-space.available {
+    border-color: #00ff88;
+    background: rgba(0, 255, 136, 0.1);
+}
+
+.parking-space.occupied {
+    border-color: #e94560;
+    background: rgba(233, 69, 96, 0.1);
+}
+
+.parking-space .space-name {
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.parking-space .space-status {
+    font-size: 1.5rem;
+    margin-top: 0.25rem;
+}
+
+.parking-space .space-location {
+    font-size: 0.7rem;
+    color: #888;
+    text-align: center;
+    margin-top: 0.25rem;
+}
+
+/* Activity Feed */
+.activity-section {
+    background: #1a1a2e;
+    border-radius: 15px;
+    padding: 1.5rem;
+}
+
+.activity-section h2 {
+    color: #e94560;
+    margin-bottom: 1rem;
+}
+
+.activity-feed {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: #0f3460;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.activity-icon {
+    font-size: 1.5rem;
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-content strong {
+    color: #e94560;
+}
+
+.activity-time {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+/* Detection Controls */
+.detection-controls {
+    background: #1a1a2e;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.detection-controls h2 {
+    color: #e94560;
+    margin-bottom: 1rem;
+}
+
+.controls-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+    margin-bottom: 1.5rem;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.control-group label {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+.control-group select {
+    padding: 0.75rem 1rem;
+    background: #0f3460;
+    border: 1px solid #1a1a2e;
+    border-radius: 8px;
+    color: #fff;
+    min-width: 200px;
+}
+
+.btn-primary {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #e94560, #ff6b6b);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(233, 69, 96, 0.4);
+}
+
+.detection-command {
+    background: #0f3460;
+    border-radius: 10px;
+    padding: 1rem;
+}
+
+.detection-command h3 {
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.detection-command code {
+    display: block;
+    background: #1a1a2e;
+    padding: 1rem;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: #00ff88;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.btn-copy {
+    margin-top: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: transparent;
+    border: 1px solid #e94560;
+    border-radius: 5px;
+    color: #e94560;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-copy:hover {
+    background: #e94560;
+    color: #fff;
+}
+
+/* Logs Section */
+.logs-section {
+    background: #1a1a2e;
+    border-radius: 15px;
+    padding: 1.5rem;
+}
+
+.logs-section h2 {
+    color: #e94560;
+    margin-bottom: 1rem;
+}
+
+.logs-container {
+    max-height: 200px;
+    overflow-y: auto;
+    background: #0a0a14;
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+}
+
+.log-entry {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #1a1a2e;
+    display: flex;
+    gap: 1rem;
+}
+
+.log-entry:last-child {
+    border-bottom: none;
+}
+
+.log-time {
+    color: #888;
+    min-width: 80px;
+}
+
+.log-entry.info .log-message {
+    color: #00ff88;
+}
+
+.log-entry.warning .log-message {
+    color: #ffd700;
+}
+
+.log-entry.error .log-message {
+    color: #e94560;
+}
+
+.log-entry.update .log-message {
+    color: #4da6ff;
+}
+
+/* Loading State */
+.loading {
+    color: #888;
+    text-align: center;
+    padding: 2rem;
+}
+
+.empty {
+    color: #666;
+    text-align: center;
+    padding: 1rem;
+    font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 1rem;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .controls-grid {
+        flex-direction: column;
+    }
+
+    .control-group select {
+        min-width: 100%;
+    }
+}

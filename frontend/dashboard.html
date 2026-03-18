@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Detection Dashboard - IntelliPark</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="index.html">🅿️ IntelliPark</a>
+        </div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="parking-search.html">Find Parking</a>
+            <a href="dashboard.html" class="active">Live Dashboard</a>
+            <a href="admin.html">Admin</a>
+        </div>
+    </nav>
+
+    <main class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>🎥 Live Parking Detection</h1>
+            <div class="connection-status" id="connectionStatus">
+                <span class="status-dot disconnected"></span>
+                <span>Connecting...</span>
+            </div>
+        </header>
+
+        <!-- Occupancy Overview Cards -->
+        <section class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-icon">🅿️</div>
+                <div class="stat-content">
+                    <h3>Total Spaces</h3>
+                    <div class="stat-value" id="totalSpaces">--</div>
+                </div>
+            </div>
+            <div class="stat-card available">
+                <div class="stat-icon">✅</div>
+                <div class="stat-content">
+                    <h3>Available</h3>
+                    <div class="stat-value" id="availableSpaces">--</div>
+                </div>
+            </div>
+            <div class="stat-card occupied">
+                <div class="stat-icon">🚗</div>
+                <div class="stat-content">
+                    <h3>Occupied</h3>
+                    <div class="stat-value" id="occupiedSpaces">--</div>
+                </div>
+            </div>
+            <div class="stat-card rate">
+                <div class="stat-icon">📊</div>
+                <div class="stat-content">
+                    <h3>Occupancy Rate</h3>
+                    <div class="stat-value" id="occupancyRate">--%</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Occupancy Bar -->
+        <section class="occupancy-bar-section">
+            <h2>Real-Time Occupancy</h2>
+            <div class="occupancy-bar-container">
+                <div class="occupancy-bar">
+                    <div class="occupancy-fill" id="occupancyFill" style="width: 0%"></div>
+                </div>
+                <div class="occupancy-label" id="occupancyLabel">0% Occupied</div>
+            </div>
+        </section>
+
+        <!-- Main Content Grid -->
+        <div class="dashboard-grid">
+            <!-- Parking Map -->
+            <section class="parking-map-section">
+                <h2>🗺️ Parking Space Map</h2>
+                <div class="map-legend">
+                    <span class="legend-item"><span class="dot available"></span> Available</span>
+                    <span class="legend-item"><span class="dot occupied"></span> Occupied</span>
+                </div>
+                <div class="parking-map" id="parkingMap">
+                    <p class="loading">Loading parking spaces...</p>
+                </div>
+            </section>
+
+            <!-- Activity Feed -->
+            <section class="activity-section">
+                <h2>📋 Live Activity</h2>
+                <div class="activity-feed" id="activityFeed">
+                    <p class="empty">Waiting for detection updates...</p>
+                </div>
+            </section>
+        </div>
+
+        <!-- Detection Controls -->
+        <section class="detection-controls">
+            <h2>🎮 Detection Controls</h2>
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label>Video Source</label>
+                    <select id="videoSource">
+                        <option value="">Select a video source...</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label>Location Filter</label>
+                    <select id="locationFilter">
+                        <option value="">All Locations</option>
+                    </select>
+                </div>
+                <button class="btn-primary" id="refreshBtn">🔄 Refresh Status</button>
+            </div>
+            <div class="detection-command" id="detectionCommand">
+                <h3>🖥️ Run Detection Command</h3>
+                <code id="commandCode">Select a video source to see the detection command</code>
+                <button class="btn-copy" id="copyCommand">📋 Copy</button>
+            </div>
+        </section>
+
+        <!-- Recent Logs -->
+        <section class="logs-section">
+            <h2>📝 Detection Logs</h2>
+            <div class="logs-container" id="logsContainer">
+                <div class="log-entry info">
+                    <span class="log-time">--:--:--</span>
+                    <span class="log-message">System ready. Start detection to see logs.</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2024 IntelliPark - AI-Powered Smart Parking</p>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/dashboard.js"></script>
+</body>
+</html>
