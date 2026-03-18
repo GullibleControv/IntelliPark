@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Detection Dashboard - IntelliPark</title>
+    <title>Live Dashboard - IntelliPark</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -11,130 +11,206 @@
 <body>
     <nav class="navbar">
         <div class="nav-brand">
-            <a href="index.html">🅿️ IntelliPark</a>
+            <a href="index.html" class="logo-link">
+                <span class="logo-icon">P</span>
+                <span class="logo-text">IntelliPark</span>
+            </a>
         </div>
         <div class="nav-links">
             <a href="index.html">Home</a>
             <a href="parking-search.html">Find Parking</a>
-            <a href="dashboard.html" class="active">Live Dashboard</a>
+            <a href="dashboard.html" class="active">Dashboard</a>
             <a href="admin.html">Admin</a>
+        </div>
+        <div class="nav-status">
+            <div class="connection-indicator" id="connectionStatus">
+                <span class="pulse-dot"></span>
+                <span class="status-text">Connecting...</span>
+            </div>
         </div>
     </nav>
 
-    <main class="dashboard-container">
+    <main class="dashboard-main">
+        <!-- Header Section -->
         <header class="dashboard-header">
-            <h1>🎥 Live Parking Detection</h1>
-            <div class="connection-status" id="connectionStatus">
-                <span class="status-dot disconnected"></span>
-                <span>Connecting...</span>
+            <div class="header-content">
+                <h1>Live Parking Dashboard</h1>
+                <p class="header-subtitle">Real-time parking space monitoring and analytics</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-refresh" id="refreshBtn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                    </svg>
+                    Refresh
+                </button>
             </div>
         </header>
 
-        <!-- Occupancy Overview Cards -->
-        <section class="stats-grid">
-            <div class="stat-card total">
-                <div class="stat-icon">🅿️</div>
-                <div class="stat-content">
-                    <h3>Total Spaces</h3>
-                    <div class="stat-value" id="totalSpaces">--</div>
+        <!-- Stats Cards -->
+        <section class="stats-section">
+            <div class="stat-card">
+                <div class="stat-icon total">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <path d="M9 17V7h4a3 3 0 010 6H9"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Total Spaces</span>
+                    <span class="stat-value" id="totalSpaces">--</span>
                 </div>
             </div>
-            <div class="stat-card available">
-                <div class="stat-icon">✅</div>
-                <div class="stat-content">
-                    <h3>Available</h3>
-                    <div class="stat-value" id="availableSpaces">--</div>
+            <div class="stat-card">
+                <div class="stat-icon available">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Available</span>
+                    <span class="stat-value available" id="availableSpaces">--</span>
                 </div>
             </div>
-            <div class="stat-card occupied">
-                <div class="stat-icon">🚗</div>
-                <div class="stat-content">
-                    <h3>Occupied</h3>
-                    <div class="stat-value" id="occupiedSpaces">--</div>
+            <div class="stat-card">
+                <div class="stat-icon occupied">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M8 12h8M12 8v8"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Occupied</span>
+                    <span class="stat-value occupied" id="occupiedSpaces">--</span>
                 </div>
             </div>
-            <div class="stat-card rate">
-                <div class="stat-icon">📊</div>
-                <div class="stat-content">
-                    <h3>Occupancy Rate</h3>
-                    <div class="stat-value" id="occupancyRate">--%</div>
+            <div class="stat-card">
+                <div class="stat-icon rate">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 20V10M12 20V4M6 20v-6"/>
+                    </svg>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Occupancy Rate</span>
+                    <span class="stat-value rate" id="occupancyRate">--%</span>
                 </div>
             </div>
         </section>
 
-        <!-- Occupancy Bar -->
-        <section class="occupancy-bar-section">
-            <h2>Real-Time Occupancy</h2>
-            <div class="occupancy-bar-container">
-                <div class="occupancy-bar">
-                    <div class="occupancy-fill" id="occupancyFill" style="width: 0%"></div>
+        <!-- Occupancy Progress -->
+        <section class="progress-section">
+            <div class="progress-card">
+                <div class="progress-header">
+                    <h3>Real-Time Occupancy</h3>
+                    <span class="progress-percent" id="occupancyLabel">0%</span>
                 </div>
-                <div class="occupancy-label" id="occupancyLabel">0% Occupied</div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="occupancyFill"></div>
+                    </div>
+                </div>
+                <div class="progress-legend">
+                    <span class="legend-available">Available</span>
+                    <span class="legend-occupied">Occupied</span>
+                </div>
             </div>
         </section>
 
-        <!-- Main Content Grid -->
+        <!-- Main Grid -->
         <div class="dashboard-grid">
             <!-- Parking Map -->
-            <section class="parking-map-section">
-                <h2>🗺️ Parking Space Map</h2>
-                <div class="map-legend">
-                    <span class="legend-item"><span class="dot available"></span> Available</span>
-                    <span class="legend-item"><span class="dot occupied"></span> Occupied</span>
+            <section class="map-section">
+                <div class="section-header">
+                    <h2>Parking Spaces</h2>
+                    <div class="map-legend">
+                        <span class="legend-item">
+                            <span class="legend-dot available"></span>
+                            Available
+                        </span>
+                        <span class="legend-item">
+                            <span class="legend-dot occupied"></span>
+                            Occupied
+                        </span>
+                    </div>
                 </div>
-                <div class="parking-map" id="parkingMap">
-                    <p class="loading">Loading parking spaces...</p>
+                <div class="parking-grid" id="parkingMap">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Loading parking spaces...</p>
+                    </div>
                 </div>
             </section>
 
             <!-- Activity Feed -->
             <section class="activity-section">
-                <h2>📋 Live Activity</h2>
+                <div class="section-header">
+                    <h2>Live Activity</h2>
+                    <span class="activity-badge" id="activityCount">0</span>
+                </div>
                 <div class="activity-feed" id="activityFeed">
-                    <p class="empty">Waiting for detection updates...</p>
+                    <div class="empty-state">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <p>Waiting for activity...</p>
+                    </div>
                 </div>
             </section>
         </div>
 
-        <!-- Detection Controls -->
-        <section class="detection-controls">
-            <h2>🎮 Detection Controls</h2>
+        <!-- Controls Section -->
+        <section class="controls-section">
+            <div class="section-header">
+                <h2>Detection Controls</h2>
+            </div>
             <div class="controls-grid">
                 <div class="control-group">
-                    <label>Video Source</label>
+                    <label for="videoSource">Video Source</label>
                     <select id="videoSource">
                         <option value="">Select a video source...</option>
                     </select>
                 </div>
                 <div class="control-group">
-                    <label>Location Filter</label>
+                    <label for="locationFilter">Location</label>
                     <select id="locationFilter">
                         <option value="">All Locations</option>
                     </select>
                 </div>
-                <button class="btn-primary" id="refreshBtn">🔄 Refresh Status</button>
             </div>
-            <div class="detection-command" id="detectionCommand">
-                <h3>🖥️ Run Detection Command</h3>
+            <div class="command-box" id="detectionCommand">
+                <div class="command-header">
+                    <span class="command-label">Detection Command</span>
+                    <button class="btn-copy" id="copyCommand">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                        </svg>
+                        Copy
+                    </button>
+                </div>
                 <code id="commandCode">Select a video source to see the detection command</code>
-                <button class="btn-copy" id="copyCommand">📋 Copy</button>
             </div>
         </section>
 
-        <!-- Recent Logs -->
+        <!-- Logs Section -->
         <section class="logs-section">
-            <h2>📝 Detection Logs</h2>
+            <div class="section-header">
+                <h2>Detection Logs</h2>
+                <button class="btn-clear" id="clearLogs">Clear</button>
+            </div>
             <div class="logs-container" id="logsContainer">
                 <div class="log-entry info">
                     <span class="log-time">--:--:--</span>
+                    <span class="log-badge info">INFO</span>
                     <span class="log-message">System ready. Start detection to see logs.</span>
                 </div>
             </div>
         </section>
     </main>
 
-    <footer class="footer">
-        <p>&copy; 2024 IntelliPark - AI-Powered Smart Parking</p>
+    <footer class="dashboard-footer">
+        <p>&copy; 2024 IntelliPark - AI-Powered Smart Parking Management</p>
     </footer>
 
     <script src="js/api.js"></script>

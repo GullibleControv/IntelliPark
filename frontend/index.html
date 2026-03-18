@@ -3,24 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IntelliPark - Smart Parking Solutions</title>
+    <title>IntelliPark - AI-Powered Smart Parking</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="css/additional.css">
+    <link rel="stylesheet" href="css/pages.css">
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar">
-        <div class="logo">
-            <a href="index.html">
-                <img src="assets/Logo-Short 1.png" alt="IntelliPark Logo">
+        <div class="nav-brand">
+            <a href="index.html" class="logo-link">
+                <span class="logo-icon">P</span>
+                <span class="logo-text">IntelliPark</span>
             </a>
         </div>
         <div class="nav-links">
-            <a href="index.html">Home</a>
+            <a href="index.html" class="active">Home</a>
             <a href="parking-search.html">Find Parking</a>
-            <a href="about.html">About Us</a>
-            <a href="contact.html">Contact Us</a>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="admin.html">Admin</a>
         </div>
         <div id="auth-nav" class="auth-buttons">
             <a href="login.html" class="btn btn-login">Login</a>
@@ -30,109 +31,148 @@
 
     <!-- Hero Section -->
     <section class="hero-section">
-        <div class="steering-wheels">
-            <img src="assets/steering-wheel.svg" alt="Steering Wheel" class="wheel">
-            <img src="assets/steering-wheel.svg" alt="Steering Wheel" class="wheel">
-            <img src="assets/steering-wheel-light.svg" alt="Steering Wheel Light" class="wheel" id="light-wheel">
-            <div class="center-content">
-                <h1>Intelli-Park</h1>
-                <p class="tagline"><b>#Revolutionizing</b> Parking Solutions for Modern Cities</p>
-            </div>
-            <img src="assets/steering-wheel-light.svg" alt="Steering Wheel Light" class="wheel" id="light-wheel">
-            <img src="assets/steering-wheel.svg" alt="Steering Wheel" class="wheel">
-            <img src="assets/steering-wheel.svg" alt="Steering Wheel" class="wheel">
-        </div>
-    </section>
-
-    <!-- Live Status Section -->
-    <section class="status-section">
-        <h2>Parking Status</h2>
-        <div id="live-status" class="live-status">
-            <div class="status-card">
-                <span class="status-number" id="total-spaces">-</span>
-                <span class="status-label">Total Spaces</span>
-            </div>
-            <div class="status-card available">
-                <span class="status-number" id="available-spaces">-</span>
-                <span class="status-label">Available</span>
-            </div>
-            <div class="status-card occupied">
-                <span class="status-number" id="occupied-spaces">-</span>
-                <span class="status-label">Occupied</span>
+        <div class="hero-content">
+            <div class="hero-badge">AI-Powered Solution</div>
+            <h1>Smart Parking for<br><span class="text-gradient">Modern Cities</span></h1>
+            <p class="hero-subtitle">Real-time parking detection using advanced computer vision. Find, book, and park with confidence.</p>
+            <div class="hero-buttons">
+                <a href="parking-search.html" class="btn btn-primary btn-large">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    Find Parking
+                </a>
+                <a href="dashboard.html" class="btn btn-outline btn-large">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    Live Dashboard
+                </a>
             </div>
         </div>
-        <a href="parking-search.html" class="btn btn-primary btn-large">Find Parking Now</a>
+        <div class="hero-visual">
+            <div class="hero-card">
+                <div class="hero-card-header">
+                    <span class="live-indicator"></span>
+                    Live Status
+                </div>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <span class="hero-stat-value" id="total-spaces">--</span>
+                        <span class="hero-stat-label">Total</span>
+                    </div>
+                    <div class="hero-stat available">
+                        <span class="hero-stat-value" id="available-spaces">--</span>
+                        <span class="hero-stat-label">Available</span>
+                    </div>
+                    <div class="hero-stat occupied">
+                        <span class="hero-stat-value" id="occupied-spaces">--</span>
+                        <span class="hero-stat-label">Occupied</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 
     <!-- Features Section -->
     <section class="features-section">
-        <h2>Why Choose IntelliPark?</h2>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2a4 4 0 0 1 4 4v1h1a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-8a3 3 0 0 1 3-3h1V6a4 4 0 0 1 4-4z"/>
-                        <circle cx="12" cy="14" r="2"/>
-                        <path d="M12 16v2"/>
-                    </svg>
-                </div>
-                <h3>AI-Powered Detection</h3>
-                <p>Real-time parking space detection using advanced YOLO computer vision technology.</p>
+        <div class="section-container">
+            <div class="section-header-centered">
+                <h2>Why Choose IntelliPark?</h2>
+                <p>Advanced technology meets seamless user experience</p>
             </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <polyline points="12 6 12 12 16 14"/>
-                    </svg>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5"/>
+                            <path d="M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <h3>AI-Powered Detection</h3>
+                    <p>Real-time parking space detection using YOLO computer vision for 99% accuracy.</p>
                 </div>
-                <h3>24/7 Availability</h3>
-                <p>Book parking spaces anytime, anywhere with our online booking system.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                    </svg>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                    </div>
+                    <h3>24/7 Availability</h3>
+                    <p>Book parking spaces anytime, anywhere with our always-on booking system.</p>
                 </div>
-                <h3>Best Rates</h3>
-                <p>Competitive hourly rates with transparent pricing. No hidden charges.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                        <line x1="16" y1="2" x2="16" y2="6"/>
-                        <line x1="8" y1="2" x2="8" y2="6"/>
-                        <line x1="3" y1="10" x2="21" y2="10"/>
-                        <path d="m9 16 2 2 4-4"/>
-                    </svg>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                    </div>
+                    <h3>Transparent Pricing</h3>
+                    <p>Competitive hourly rates with no hidden charges. Pay only for what you use.</p>
                 </div>
-                <h3>Easy Booking</h3>
-                <p>Simple and fast booking process. Reserve your spot in just a few clicks.</p>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                        </svg>
+                    </div>
+                    <h3>Instant Confirmation</h3>
+                    <p>Reserve your spot in seconds. No waiting, no uncertainty.</p>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- How It Works Section -->
     <section class="how-it-works-section">
-        <h2>How It Works</h2>
-        <div class="steps-grid">
-            <div class="step-card">
-                <div class="step-number">1</div>
-                <h3>Search</h3>
-                <p>Find available parking spaces near your destination.</p>
+        <div class="section-container">
+            <div class="section-header-centered light">
+                <h2>How It Works</h2>
+                <p>Three simple steps to hassle-free parking</p>
             </div>
-            <div class="step-card">
-                <div class="step-number">2</div>
-                <h3>Book</h3>
-                <p>Select your preferred spot and time slot.</p>
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>Search</h3>
+                    <p>Find available parking spaces near your destination with real-time availability.</p>
+                </div>
+                <div class="step-connector">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>Book</h3>
+                    <p>Select your preferred spot and time. Get instant confirmation.</p>
+                </div>
+                <div class="step-connector">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </div>
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>Park</h3>
+                    <p>Arrive and park in your reserved spot. It's that simple.</p>
+                </div>
             </div>
-            <div class="step-card">
-                <div class="step-number">3</div>
-                <h3>Park</h3>
-                <p>Arrive at the location and park in your reserved spot.</p>
-            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-content">
+            <h2>Ready to Park Smarter?</h2>
+            <p>Join thousands of drivers who save time every day</p>
+            <a href="parking-search.html" class="btn btn-white btn-large">Get Started Free</a>
         </div>
     </section>
 
@@ -140,25 +180,35 @@
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-brand">
-                <img src="assets/Logo-Long  1.png" alt="IntelliPark Logo">
-                <p>Smart Parking Solutions for Modern Cities</p>
+                <div class="footer-logo">
+                    <span class="logo-icon">P</span>
+                    <span class="logo-text">IntelliPark</span>
+                </div>
+                <p>AI-powered smart parking solutions for modern cities. Making urban mobility seamless.</p>
             </div>
             <div class="footer-links">
-                <h3>Organization</h3>
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="parking-search.html">Find Parking</a></li>
+                    <li><a href="dashboard.html">Live Dashboard</a></li>
+                    <li><a href="admin.html">Admin Panel</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h3>Company</h3>
                 <ul>
                     <li><a href="about.html">About Us</a></li>
-                    <li><a href="contact.html">Contact Us</a></li>
-                    <li><a href="parking-search.html">Find Parking</a></li>
+                    <li><a href="contact.html">Contact</a></li>
                 </ul>
             </div>
             <div class="footer-contact">
                 <h3>Get In Touch</h3>
+                <p>hello@intellipark.com</p>
                 <p>+91 91012-27640</p>
-                <p>+91 876105-5433</p>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>Copyright 2025 IntelliPark. All Rights Reserved.</p>
+            <p>&copy; 2024 IntelliPark. All Rights Reserved.</p>
         </div>
     </footer>
 
@@ -178,10 +228,7 @@
             }
         }
 
-        // Load status on page load
         loadStatus();
-
-        // Refresh status every 30 seconds
         setInterval(loadStatus, 30000);
     </script>
 </body>

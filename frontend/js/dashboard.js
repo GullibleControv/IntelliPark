@@ -1,6 +1,7 @@
 /**
  * IntelliPark Live Detection Dashboard
  * Real-time parking status monitoring with WebSocket updates
+ * Professional UI with clean animations
  */
 
 // Auto-detect API URL based on environment
@@ -10,7 +11,7 @@ const API_BASE_URL = window.INTELLIPARK_API_URL ||
         : window.location.origin);
 let socket = null;
 let currentLocation = '';
-let activityLog = [];
+let activityCount = 0;
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', () => {
@@ -79,19 +80,22 @@ function initWebSocket() {
  */
 function updateConnectionStatus(status) {
     const statusEl = document.getElementById('connectionStatus');
-    const dot = statusEl.querySelector('.status-dot');
-    const text = statusEl.querySelector('span:last-child');
+    const dot = statusEl.querySelector('.pulse-dot');
+    const text = statusEl.querySelector('.status-text');
 
-    dot.className = 'status-dot ' + (status === 'connected' ? 'connected' : 'disconnected');
+    // Remove all status classes
+    statusEl.classList.remove('connected', 'disconnected');
 
     switch (status) {
         case 'connected':
+            statusEl.classList.add('connected');
             text.textContent = 'Live';
             break;
         case 'connecting':
             text.textContent = 'Connecting...';
             break;
         case 'disconnected':
+            statusEl.classList.add('disconnected');
             text.textContent = 'Offline';
             break;
     }
@@ -140,11 +144,13 @@ async function loadParkingSpaces() {
 
         if (spaces.length === 0) {
             mapEl.innerHTML = `
-                <div class="empty" style="grid-column: 1 / -1; text-align: center; padding: 2rem;">
-                    <p>No parking spaces configured.</p>
-                    <p style="color: #888; font-size: 0.9rem; margin-top: 0.5rem;">
-                        Go to <a href="admin.html" style="color: #e94560;">Admin Panel</a> to add parking spaces.
-                    </p>
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <path d="M9 17V7h4a3 3 0 010 6H9"/>
+                    </svg>
+                    <p>No parking spaces configured</p>
+                    <a href="admin.html" style="color: var(--primary-color); font-weight: 500;">Go to Admin Panel</a>
                 </div>
             `;
             return;
@@ -155,15 +161,29 @@ async function loadParkingSpaces() {
                  data-space-id="${space.id}"
                  title="${space.name} - ${space.location}">
                 <span class="space-name">${space.name}</span>
-                <span class="space-status">${space.is_occupied ? '🚗' : '✅'}</span>
-                <span class="space-location">${space.location.split(' - ')[0]}</span>
+                <span class="space-status">${space.is_occupied ? 'Occupied' : 'Free'}</span>
+                <span class="space-location">${truncateLocation(space.location)}</span>
             </div>
         `).join('');
 
     } catch (error) {
         console.error('Error loading parking spaces:', error);
-        mapEl.innerHTML = '<p class="error">Failed to load parking spaces</p>';
+        mapEl.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <p style="color: var(--danger-color);">Failed to load parking spaces</p>
+            </div>
+        `;
     }
+}
+
+/**
+ * Truncate long location names
+ */
+function truncateLocation(location) {
+    if (location.length > 15) {
+        return location.substring(0, 12) + '...';
+    }
+    return location;
 }
 
 /**
@@ -180,7 +200,6 @@ async function loadVideoSources() {
         });
 
         if (!response.ok) {
-            // Not logged in or no admin access
             selectEl.innerHTML = '<option value="">Login as admin to see video sources</option>';
             return;
         }
@@ -252,27 +271,43 @@ function updateStats(data) {
     const available = total - occupied;
     const rate = total > 0 ? Math.round((occupied / total) * 100) : 0;
 
-    // Update stat cards
-    document.getElementById('totalSpaces').textContent = total;
-    document.getElementById('availableSpaces').textContent = available;
-    document.getElementById('occupiedSpaces').textContent = occupied;
+    // Update stat cards with animation
+    animateValue('totalSpaces', total);
+    animateValue('availableSpaces', available);
+    animateValue('occupiedSpaces', occupied);
     document.getElementById('occupancyRate').textContent = `${rate}%`;
 
-    // Update occupancy bar
+    // Update progress bar
     const fillEl = document.getElementById('occupancyFill');
     const labelEl = document.getElementById('occupancyLabel');
 
     fillEl.style.width = `${rate}%`;
-    labelEl.textContent = `${rate}% Occupied`;
+    labelEl.textContent = `${rate}%`;
 
-    // Change bar color based on occupancy
+    // Update progress bar color based on occupancy level
     if (rate >= 80) {
-        fillEl.style.background = 'linear-gradient(90deg, #e94560, #ff6b6b)';
+        fillEl.style.background = `linear-gradient(90deg, #f87171 0%, #ef4444 100%)`;
     } else if (rate >= 50) {
-        fillEl.style.background = 'linear-gradient(90deg, #ffd700, #ffb700)';
+        fillEl.style.background = `linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%)`;
     } else {
-        fillEl.style.background = 'linear-gradient(90deg, #00ff88, #00cc6a)';
+        fillEl.style.background = `linear-gradient(90deg, #34d399 0%, #10b981 100%)`;
     }
+}
+
+/**
+ * Animate number value change
+ */
+function animateValue(elementId, newValue) {
+    const el = document.getElementById(elementId);
+    const currentValue = parseInt(el.textContent) || 0;
+
+    if (currentValue === newValue) return;
+
+    el.textContent = newValue;
+    el.style.transform = 'scale(1.1)';
+    setTimeout(() => {
+        el.style.transform = 'scale(1)';
+    }, 200);
 }
 
 /**
@@ -286,20 +321,20 @@ function handleSpaceUpdate(data) {
     const spaceEl = document.querySelector(`[data-space-id="${spaceId}"]`);
     if (spaceEl) {
         spaceEl.className = `parking-space ${isOccupied ? 'occupied' : 'available'}`;
-        spaceEl.querySelector('.space-status').textContent = isOccupied ? '🚗' : '✅';
+        spaceEl.querySelector('.space-status').textContent = isOccupied ? 'Occupied' : 'Free';
 
         // Add flash animation
         spaceEl.style.animation = 'none';
-        setTimeout(() => {
-            spaceEl.style.animation = 'flash 0.5s';
-        }, 10);
+        spaceEl.offsetHeight; // Trigger reflow
+        spaceEl.style.animation = 'flash 0.5s ease-out';
     }
 
     // Add activity item
     addActivity(
-        isOccupied ? '🚗' : '✅',
-        `Space ${data.space_id} is now <strong>${isOccupied ? 'occupied' : 'available'}</strong>`,
-        data.confidence ? `Confidence: ${(data.confidence * 100).toFixed(1)}%` : ''
+        isOccupied,
+        `Space ${data.space_id}`,
+        isOccupied ? 'Vehicle parked' : 'Space freed',
+        data.confidence ? `${(data.confidence * 100).toFixed(0)}% confidence` : ''
     );
 
     // Add log entry
@@ -312,27 +347,35 @@ function handleSpaceUpdate(data) {
 /**
  * Add activity item to feed
  */
-function addActivity(icon, message, extra = '') {
+function addActivity(isOccupied, title, message, extra = '') {
     const feedEl = document.getElementById('activityFeed');
 
-    // Remove empty message if exists
-    const emptyMsg = feedEl.querySelector('.empty');
-    if (emptyMsg) emptyMsg.remove();
+    // Remove empty state if exists
+    const emptyState = feedEl.querySelector('.empty-state');
+    if (emptyState) emptyState.remove();
 
-    const time = new Date().toLocaleTimeString();
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const statusClass = isOccupied ? 'occupied' : 'available';
+    const icon = isOccupied ?
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>' :
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
 
     const itemHTML = `
-        <div class="activity-item">
-            <span class="activity-icon">${icon}</span>
+        <div class="activity-item ${statusClass}">
+            <div class="activity-icon">${icon}</div>
             <div class="activity-content">
-                <div>${message}</div>
-                ${extra ? `<small style="color: #888;">${extra}</small>` : ''}
+                <strong>${title}</strong>
+                <p>${message}${extra ? ` - ${extra}` : ''}</p>
             </div>
             <span class="activity-time">${time}</span>
         </div>
     `;
 
     feedEl.insertAdjacentHTML('afterbegin', itemHTML);
+
+    // Update activity count
+    activityCount++;
+    document.getElementById('activityCount').textContent = activityCount;
 
     // Limit to 20 items
     const items = feedEl.querySelectorAll('.activity-item');
@@ -346,11 +389,14 @@ function addActivity(icon, message, extra = '') {
  */
 function addLog(level, message) {
     const logsEl = document.getElementById('logsContainer');
-    const time = new Date().toLocaleTimeString();
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    const badgeText = level.toUpperCase();
 
     const logHTML = `
         <div class="log-entry ${level}">
             <span class="log-time">${time}</span>
+            <span class="log-badge ${level}">${badgeText}</span>
             <span class="log-message">${message}</span>
         </div>
     `;
@@ -394,9 +440,16 @@ function setupEventListeners() {
 
     // Refresh button
     document.getElementById('refreshBtn').addEventListener('click', () => {
+        const btn = document.getElementById('refreshBtn');
+        btn.disabled = true;
+
         loadParkingSpaces();
         loadOverallStatus();
         addLog('info', 'Status refreshed');
+
+        setTimeout(() => {
+            btn.disabled = false;
+        }, 1000);
     });
 
     // Copy command button
@@ -404,12 +457,33 @@ function setupEventListeners() {
         const code = document.getElementById('commandCode').textContent;
         navigator.clipboard.writeText(code).then(() => {
             const btn = document.getElementById('copyCommand');
-            btn.textContent = '✓ Copied!';
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Copied!
+            `;
             setTimeout(() => {
-                btn.textContent = '📋 Copy';
+                btn.innerHTML = originalHTML;
             }, 2000);
         });
     });
+
+    // Clear logs button
+    const clearLogsBtn = document.getElementById('clearLogs');
+    if (clearLogsBtn) {
+        clearLogsBtn.addEventListener('click', () => {
+            const logsEl = document.getElementById('logsContainer');
+            logsEl.innerHTML = `
+                <div class="log-entry info">
+                    <span class="log-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+                    <span class="log-badge info">INFO</span>
+                    <span class="log-message">Logs cleared</span>
+                </div>
+            `;
+        });
+    }
 }
 
 /**
@@ -431,8 +505,13 @@ function updateDetectionCommand(url, location) {
 const style = document.createElement('style');
 style.textContent = `
     @keyframes flash {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; transform: scale(1.05); }
+        0% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.6; transform: scale(1.02); box-shadow: 0 0 20px rgba(0, 214, 125, 0.4); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+
+    .stat-value {
+        transition: transform 0.2s ease;
     }
 `;
 document.head.appendChild(style);

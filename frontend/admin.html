@@ -5,21 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - IntelliPark</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="css/additional.css">
+    <link rel="stylesheet" href="css/pages.css">
     <link rel="stylesheet" href="css/admin.css">
     <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
 </head>
 <body>
     <!-- Navbar -->
     <nav class="navbar">
-        <div class="logo">
-            <a href="index.html">
-                <img src="assets/Logo-Short 1.png" alt="IntelliPark Logo">
+        <div class="nav-brand">
+            <a href="index.html" class="logo-link">
+                <span class="logo-icon">P</span>
+                <span class="logo-text">IntelliPark</span>
             </a>
         </div>
         <div class="nav-links">
             <a href="index.html">Home</a>
             <a href="parking-search.html">Find Parking</a>
+            <a href="dashboard.html">Dashboard</a>
             <a href="admin.html" class="active">Admin</a>
         </div>
         <div id="auth-nav" class="auth-buttons">
@@ -29,125 +31,226 @@
     </nav>
 
     <!-- Admin Section -->
-    <section class="admin-section">
+    <main class="page-main">
         <div class="admin-container">
-            <h1>Parking Space Configuration</h1>
+            <div class="admin-header">
+                <h1>Admin Panel</h1>
+                <p>Configure parking spaces and manage detection</p>
+            </div>
 
             <!-- Messages -->
-            <div id="error-message" class="error-message" style="display: none;"></div>
-            <div id="success-message" class="success-message" style="display: none;"></div>
+            <div id="error-message" class="alert alert-error" style="display: none;"></div>
+            <div id="success-message" class="alert alert-success" style="display: none;"></div>
 
-            <!-- Step 1: Video Source -->
-            <div class="admin-card" id="step-video">
-                <h2>Step 1: Video Source</h2>
-                <p class="step-description">Enter a YouTube parking lot video URL to capture a frame for drawing parking spaces.</p>
-                <div class="form-group">
-                    <label for="youtube-url">YouTube Video URL</label>
-                    <input type="url" id="youtube-url"
-                           placeholder="https://www.youtube.com/watch?v=..."
-                           class="form-input">
-                </div>
-                <div class="form-group">
-                    <label for="location-name">Location Name</label>
-                    <input type="text" id="location-name"
-                           placeholder="e.g., Main Street Parking"
-                           class="form-input">
-                </div>
-                <button id="btn-extract-frame" class="btn btn-primary">
-                    Extract Frame
-                </button>
-            </div>
-
-            <!-- Step 2: Draw Polygons -->
-            <div class="admin-card" id="step-draw" style="display: none;">
-                <h2>Step 2: Draw Parking Spaces</h2>
-                <div class="drawing-instructions">
-                    <p><strong>Instructions:</strong></p>
-                    <ul>
-                        <li>Click on the image to add polygon points</li>
-                        <li>Press <kbd>Enter</kbd> or double-click to complete a polygon</li>
-                        <li>Press <kbd>Escape</kbd> to cancel current polygon</li>
-                        <li>Click on existing polygons to select them</li>
-                        <li>Press <kbd>Delete</kbd> to remove selected polygon</li>
-                    </ul>
-                </div>
-
-                <div class="canvas-toolbar">
-                    <button id="btn-undo" class="btn btn-outline" disabled>Undo Point</button>
-                    <button id="btn-clear-current" class="btn btn-outline" disabled>Clear Current</button>
-                    <button id="btn-delete-selected" class="btn btn-outline" disabled>Delete Selected</button>
-                    <span class="space-count">Spaces: <span id="polygon-count">0</span></span>
-                </div>
-
-                <div class="canvas-container">
-                    <canvas id="drawing-canvas"></canvas>
-                </div>
-
-                <div class="canvas-actions">
-                    <button id="btn-back" class="btn btn-outline">Back</button>
-                    <button id="btn-save-spaces" class="btn btn-primary" disabled>
-                        Save Parking Spaces
+            <!-- Admin Cards Grid -->
+            <div class="admin-grid">
+                <!-- Step 1: Video Source -->
+                <div class="admin-card" id="step-video">
+                    <div class="admin-card-header">
+                        <div class="admin-card-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="23 7 16 12 23 17 23 7"/>
+                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2>Video Source</h2>
+                            <span class="step-badge">Step 1</span>
+                        </div>
+                    </div>
+                    <p class="admin-card-desc">Enter a YouTube parking lot video URL to extract a frame for configuring parking spaces.</p>
+                    <div class="form-group">
+                        <label for="youtube-url">YouTube Video URL</label>
+                        <input type="url" id="youtube-url"
+                               placeholder="https://www.youtube.com/watch?v=..."
+                               class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="location-name">Location Name</label>
+                        <input type="text" id="location-name"
+                               placeholder="e.g., Main Street Parking"
+                               class="form-input">
+                    </div>
+                    <button id="btn-extract-frame" class="btn btn-primary">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21 15 16 10 5 21"/>
+                        </svg>
+                        Extract Frame
                     </button>
                 </div>
-            </div>
 
-            <!-- Step 3: Manage Spaces -->
-            <div class="admin-card" id="step-manage">
-                <h2>Existing Parking Spaces</h2>
-                <div class="spaces-filter">
-                    <select id="filter-location" class="form-select">
-                        <option value="">All Locations</option>
-                    </select>
-                    <button id="btn-refresh-spaces" class="btn btn-outline">Refresh</button>
-                </div>
-                <div id="spaces-list" class="spaces-list">
-                    <p class="empty-state">Loading parking spaces...</p>
-                </div>
-            </div>
+                <!-- Step 2: Draw Polygons -->
+                <div class="admin-card wide" id="step-draw" style="display: none;">
+                    <div class="admin-card-header">
+                        <div class="admin-card-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+                                <polyline points="2 17 12 22 22 17"/>
+                                <polyline points="2 12 12 17 22 12"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2>Draw Parking Spaces</h2>
+                            <span class="step-badge">Step 2</span>
+                        </div>
+                    </div>
 
-            <!-- Detection Control -->
-            <div class="admin-card" id="step-detection">
-                <h2>Detection Control</h2>
-                <p class="step-description">Configure and start the detection system for a video source.</p>
-                <div class="detection-actions">
-                    <select id="select-source" class="form-select">
-                        <option value="">Select Video Source</option>
-                    </select>
-                    <button id="btn-get-config" class="btn btn-primary" disabled>
-                        Get Detection Command
-                    </button>
+                    <div class="instructions-box">
+                        <h4>Instructions</h4>
+                        <ul>
+                            <li>Click on the image to add polygon points</li>
+                            <li>Press <kbd>Enter</kbd> or double-click to complete a polygon</li>
+                            <li>Press <kbd>Escape</kbd> to cancel current polygon</li>
+                            <li>Click on existing polygons to select them</li>
+                            <li>Press <kbd>Delete</kbd> to remove selected polygon</li>
+                        </ul>
+                    </div>
+
+                    <div class="canvas-toolbar">
+                        <button id="btn-undo" class="btn btn-outline btn-sm" disabled>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 7v6h6"/>
+                                <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"/>
+                            </svg>
+                            Undo
+                        </button>
+                        <button id="btn-clear-current" class="btn btn-outline btn-sm" disabled>Clear Current</button>
+                        <button id="btn-delete-selected" class="btn btn-outline btn-sm" disabled>Delete Selected</button>
+                        <div class="space-counter">
+                            <span class="counter-label">Spaces:</span>
+                            <span class="counter-value" id="polygon-count">0</span>
+                        </div>
+                    </div>
+
+                    <div class="canvas-container">
+                        <canvas id="drawing-canvas"></canvas>
+                    </div>
+
+                    <div class="canvas-actions">
+                        <button id="btn-back" class="btn btn-outline">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 12H5M12 19l-7-7 7-7"/>
+                            </svg>
+                            Back
+                        </button>
+                        <button id="btn-save-spaces" class="btn btn-primary" disabled>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                                <polyline points="7 3 7 8 15 8"/>
+                            </svg>
+                            Save Parking Spaces
+                        </button>
+                    </div>
                 </div>
-                <div id="detection-command" class="detection-command" style="display: none;">
-                    <p>Run this command in the detection folder:</p>
-                    <code id="command-text"></code>
+
+                <!-- Existing Spaces -->
+                <div class="admin-card" id="step-manage">
+                    <div class="admin-card-header">
+                        <div class="admin-card-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"/>
+                                <rect x="14" y="3" width="7" height="7"/>
+                                <rect x="14" y="14" width="7" height="7"/>
+                                <rect x="3" y="14" width="7" height="7"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2>Existing Spaces</h2>
+                        </div>
+                    </div>
+                    <div class="spaces-filter-row">
+                        <select id="filter-location" class="form-select">
+                            <option value="">All Locations</option>
+                        </select>
+                        <button id="btn-refresh-spaces" class="btn btn-outline btn-sm">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                            </svg>
+                            Refresh
+                        </button>
+                    </div>
+                    <div id="spaces-list" class="spaces-list">
+                        <div class="empty-state">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <path d="M9 17V7h4a3 3 0 010 6H9"/>
+                            </svg>
+                            <p>No parking spaces configured yet</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detection Control -->
+                <div class="admin-card" id="step-detection">
+                    <div class="admin-card-header">
+                        <div class="admin-card-icon">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2>Detection Control</h2>
+                        </div>
+                    </div>
+                    <p class="admin-card-desc">Generate the command to start real-time detection for a video source.</p>
+                    <div class="detection-controls">
+                        <select id="select-source" class="form-select">
+                            <option value="">Select Video Source</option>
+                        </select>
+                        <button id="btn-get-config" class="btn btn-primary" disabled>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="4 17 10 11 4 5"/>
+                                <line x1="12" y1="19" x2="20" y2="19"/>
+                            </svg>
+                            Get Command
+                        </button>
+                    </div>
+                    <div id="detection-command" class="detection-command" style="display: none;">
+                        <div class="command-header">
+                            <span class="command-label">Run in detection folder:</span>
+                            <button class="btn-copy-cmd" onclick="copyCommand()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                                </svg>
+                                Copy
+                            </button>
+                        </div>
+                        <code id="command-text"></code>
+                    </div>
                 </div>
             </div>
         </div>
-    </section>
+    </main>
 
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-brand">
-                <img src="assets/Logo-Long  1.png" alt="IntelliPark Logo">
-                <p>Smart Parking Solutions for Modern Cities</p>
+                <div class="footer-logo">
+                    <span class="logo-icon">P</span>
+                    <span class="logo-text">IntelliPark</span>
+                </div>
+                <p>AI-powered smart parking solutions.</p>
             </div>
             <div class="footer-links">
-                <h3>Organization</h3>
+                <h3>Quick Links</h3>
                 <ul>
-                    <li><a href="about.html">About Us</a></li>
-                    <li><a href="contact.html">Contact Us</a></li>
-                    <li><a href="parking-search.html">Find Parking</a></li>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="dashboard.html">Dashboard</a></li>
                 </ul>
             </div>
             <div class="footer-contact">
-                <h3>Get In Touch</h3>
-                <p>+91 91012-27640</p>
-                <p>+91 876105-5433</p>
+                <h3>Contact</h3>
+                <p>hello@intellipark.com</p>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>Copyright 2025 IntelliPark. All Rights Reserved.</p>
+            <p>&copy; 2024 IntelliPark. All Rights Reserved.</p>
         </div>
     </footer>
 
@@ -156,5 +259,17 @@
     <script src="js/auth.js"></script>
     <script src="js/polygon-drawer.js"></script>
     <script src="js/admin.js"></script>
+    <script>
+        function copyCommand() {
+            const code = document.getElementById('command-text').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.querySelector('.btn-copy-cmd');
+                btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg> Copy';
+                }, 2000);
+            });
+        }
+    </script>
 </body>
 </html>
