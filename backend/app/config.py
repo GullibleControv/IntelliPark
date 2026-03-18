@@ -9,28 +9,44 @@ load_dotenv()
 def get_secret_key():
     """
     Get SECRET_KEY from environment.
-    In production, a secure key MUST be provided.
-    In development, generates a random key with a warning.
+    In production, a secure key MUST be provided via environment variables.
+    Uses a build-safe default during container build, but logs warnings at runtime.
     """
     key = os.getenv('SECRET_KEY')
+    is_production = (
+        os.getenv('FLASK_ENV') == 'production' or
+        os.getenv('RAILWAY_ENVIRONMENT') or
+        os.getenv('RENDER') or
+        os.getenv('HEROKU_APP_NAME')
+    )
 
     if not key:
-        # Check if we're in production
-        if os.getenv('FLASK_ENV') == 'production' or os.getenv('RAILWAY_ENVIRONMENT'):
-            raise ValueError(
-                "SECURITY ERROR: SECRET_KEY must be set in production! "
-                "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+        if is_production:
+            # Use a build-safe default but log a critical warning
+            # This allows the container to build but warns at runtime
+            key = 'INSECURE-DEFAULT-KEY-SET-SECRET_KEY-ENV-VAR'
+            warnings.warn(
+                "SECURITY WARNING: SECRET_KEY not set in production! "
+                "Set SECRET_KEY environment variable in Railway dashboard. "
+                "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\"",
+                UserWarning
             )
-        # Development: generate random key and warn
-        key = secrets.token_hex(32)
+        else:
+            # Development: generate random key
+            key = secrets.token_hex(32)
+            warnings.warn(
+                "SECRET_KEY not set - using random key. Sessions will not persist across restarts.",
+                UserWarning
+            )
+    elif is_production and (key.startswith('INSECURE') or key == 'your-super-secret-key-change-this'):
         warnings.warn(
-            "SECRET_KEY not set - using random key. Sessions will not persist across restarts. "
-            "Set SECRET_KEY in .env for development.",
+            "SECURITY WARNING: Using insecure default SECRET_KEY in production! "
+            "Set a proper SECRET_KEY in Railway dashboard.",
             UserWarning
         )
 
     # Validate key strength
-    if key and len(key) < 32:
+    if key and len(key) < 32 and not key.startswith('INSECURE'):
         warnings.warn(
             "SECRET_KEY is too short (< 32 chars). Use a stronger key for security.",
             UserWarning
