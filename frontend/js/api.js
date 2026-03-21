@@ -3,8 +3,22 @@
  * Handles all API communication with the backend
  */
 
-// Use relative URL for Docker (nginx proxy) or absolute for local dev
-const API_BASE_URL = window.location.port === '8080' ? '/api' : 'http://localhost:5000/api';
+// Auto-detect API URL: use relative URL in production, localhost in development
+const API_BASE_URL = (function() {
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+
+    // Production: use relative URL (same origin)
+    if (hostname.includes('render.com') ||
+        hostname.includes('onrender.com') ||
+        hostname.includes('railway.app') ||
+        (!port && hostname !== 'localhost' && hostname !== '127.0.0.1')) {
+        return '/api';
+    }
+
+    // Development: use localhost:5000
+    return 'http://localhost:5000/api';
+})();
 
 class ApiClient {
     constructor() {

@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, jsonify, g, request
+from flask import Flask, jsonify, g, request, send_from_directory
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_limiter import Limiter
@@ -9,6 +9,9 @@ from flask_limiter.util import get_remote_address
 from app.config import Config
 from app.models import db, User
 from app.utils.auth import hash_password
+
+# Frontend directory (relative to backend)
+FRONTEND_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'frontend')
 
 # Initialize extensions (without app)
 migrate = Migrate()
@@ -121,8 +124,8 @@ def create_app(config_class=Config):
         # HTTPS enforcement (in production)
         if not app.config.get('DEBUG'):
             response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
-        # Content Security Policy
-        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+        # Content Security Policy (allow fonts and websockets)
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' wss: ws:"
         # Referrer policy
         response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
         # Permissions policy
@@ -154,6 +157,28 @@ def create_app(config_class=Config):
             'error': 'Rate limit exceeded. Please try again later.',
             'retry_after': error.description
         }), 429
+
+    # Serve frontend static files in production
+    @app.route('/')
+    def serve_index():
+        """Serve the main index.html"""
+        return send_from_directory(FRONTEND_DIR, 'index.html')
+
+    @app.route('/<path:filename>')
+    def serve_static(filename):
+        """Serve static files from frontend directory"""
+        # Check if it's an API route (shouldn't reach here, but safety check)
+        if filename.startswith('api/'):
+            return jsonify({'error': 'Not found'}), 404
+
+        # Try to serve the file
+        try:
+            return send_from_directory(FRONTEND_DIR, filename)
+        except Exception:
+            # If file not found, serve index.html for SPA routing
+            if '.' not in filename:
+                return send_from_directory(FRONTEND_DIR, 'index.html')
+            return jsonify({'error': 'File not found'}), 404
 
     logger.info("IntelliPark API initialized successfully")
 
