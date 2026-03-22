@@ -1,14 +1,31 @@
 """
 Email notification service for IntelliPark.
 Handles sending booking confirmations, reminders, and alerts.
+
+SECURITY: All user-controlled data is HTML-escaped before rendering
+in email templates to prevent XSS attacks.
 """
 import logging
 from datetime import datetime
 from flask import current_app, render_template_string
 from flask_mail import Mail, Message
 from threading import Thread
+from markupsafe import escape as html_escape
 
 logger = logging.getLogger(__name__)
+
+
+def safe_str(value):
+    """
+    Safely escape a value for HTML rendering.
+    Returns empty string for None values.
+
+    SECURITY: Prevents XSS attacks in email templates by escaping
+    HTML special characters (<, >, &, ", ').
+    """
+    if value is None:
+        return ''
+    return html_escape(str(value))
 
 # Initialize Mail without app (will be initialized in create_app)
 mail = Mail()
@@ -272,16 +289,17 @@ PAYMENT_RECEIPT_TEMPLATE = """
 def send_booking_confirmation(user, booking):
     """Send booking confirmation email."""
     try:
+        # SECURITY: Escape all user-controlled data to prevent XSS
         html = render_template_string(
             BOOKING_CONFIRMATION_TEMPLATE,
-            user_name=user.name,
+            user_name=safe_str(user.name),
             booking_id=booking.id,
-            location=booking.space.location,
-            space_name=booking.space.name,
+            location=safe_str(booking.space.location),
+            space_name=safe_str(booking.space.name),
             booking_date=booking.start_time.strftime('%B %d, %Y'),
             start_time=booking.start_time.strftime('%I:%M %p'),
             end_time=booking.end_time.strftime('%I:%M %p'),
-            vehicle_number=booking.vehicle_number,
+            vehicle_number=safe_str(booking.vehicle_number),
             total_amount=booking.total_amount,
             app_url=current_app.config.get('APP_URL', 'http://localhost:5000')
         )
@@ -299,12 +317,13 @@ def send_booking_confirmation(user, booking):
 def send_booking_reminder(user, booking, minutes_until=30):
     """Send booking reminder email."""
     try:
+        # SECURITY: Escape all user-controlled data to prevent XSS
         html = render_template_string(
             BOOKING_REMINDER_TEMPLATE,
-            user_name=user.name,
+            user_name=safe_str(user.name),
             minutes_until=minutes_until,
-            location=booking.space.location,
-            space_name=booking.space.name,
+            location=safe_str(booking.space.location),
+            space_name=safe_str(booking.space.name),
             start_time=booking.start_time.strftime('%I:%M %p')
         )
 
@@ -321,12 +340,13 @@ def send_booking_reminder(user, booking, minutes_until=30):
 def send_booking_cancellation(user, booking, refund_amount=None):
     """Send booking cancellation email."""
     try:
+        # SECURITY: Escape all user-controlled data to prevent XSS
         html = render_template_string(
             BOOKING_CANCELLATION_TEMPLATE,
-            user_name=user.name,
+            user_name=safe_str(user.name),
             booking_id=booking.id,
-            location=booking.space.location,
-            space_name=booking.space.name,
+            location=safe_str(booking.space.location),
+            space_name=safe_str(booking.space.name),
             start_time=booking.start_time.strftime('%I:%M %p'),
             end_time=booking.end_time.strftime('%I:%M %p'),
             refund_amount=refund_amount
@@ -345,16 +365,17 @@ def send_booking_cancellation(user, booking, refund_amount=None):
 def send_payment_receipt(user, booking, payment_data):
     """Send payment receipt email."""
     try:
+        # SECURITY: Escape all user-controlled data to prevent XSS
         html = render_template_string(
             PAYMENT_RECEIPT_TEMPLATE,
-            user_name=user.name,
-            receipt_id=payment_data.get('receipt_id'),
+            user_name=safe_str(user.name),
+            receipt_id=safe_str(payment_data.get('receipt_id')),
             payment_date=datetime.utcnow().strftime('%B %d, %Y'),
             booking_id=booking.id,
-            location=booking.space.location,
+            location=safe_str(booking.space.location),
             duration_hours=round((booking.end_time - booking.start_time).total_seconds() / 3600, 1),
             amount=payment_data.get('amount', booking.total_amount),
-            payment_method=payment_data.get('payment_method', 'Card')
+            payment_method=safe_str(payment_data.get('payment_method', 'Card'))
         )
 
         return send_email(

@@ -11,6 +11,57 @@ logger = logging.getLogger(__name__)
 parking_bp = Blueprint('parking', __name__, url_prefix='/api/parking')
 
 
+def validate_coordinates(coordinates):
+    """
+    Validate polygon coordinates for parking space detection.
+
+    SECURITY: Prevents malformed data that could crash the detection system
+    or cause unexpected behavior in polygon calculations.
+
+    Returns:
+        tuple: (is_valid: bool, error_message: str or None)
+    """
+    if coordinates is None:
+        return True, None  # Coordinates are optional
+
+    if not isinstance(coordinates, list):
+        return False, "Coordinates must be a list"
+
+    if len(coordinates) < 3:
+        return False, "Polygon must have at least 3 points"
+
+    if len(coordinates) > 100:
+        return False, "Polygon cannot have more than 100 points"
+
+    for i, point in enumerate(coordinates):
+        # Each point must be a list/tuple of 2 numbers
+        if not isinstance(point, (list, tuple)):
+            return False, f"Point {i} must be a list [x, y]"
+
+        if len(point) != 2:
+            return False, f"Point {i} must have exactly 2 values [x, y]"
+
+        x, y = point
+
+        # Check if values are numbers
+        if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+            return False, f"Point {i} coordinates must be numbers"
+
+        # Check for special float values that could cause issues
+        import math
+        if math.isnan(x) or math.isnan(y):
+            return False, f"Point {i} contains NaN value"
+
+        if math.isinf(x) or math.isinf(y):
+            return False, f"Point {i} contains infinite value"
+
+        # Reasonable bounds check (assuming pixel coordinates or geographic)
+        if abs(x) > 1e9 or abs(y) > 1e9:
+            return False, f"Point {i} coordinates exceed reasonable bounds"
+
+    return True, None
+
+
 def sanitize_like_pattern(value: str) -> str:
     """
     Sanitize input for use in LIKE/ILIKE patterns.
@@ -107,9 +158,9 @@ def create_space():
         floor = data.get('floor', 'G')
 
         # Validate coordinates if provided
-        if coordinates:
-            if not isinstance(coordinates, list) or len(coordinates) < 3:
-                return jsonify({'error': 'Coordinates must be a list of at least 3 points'}), 400
+        is_valid, error_msg = validate_coordinates(coordinates)
+        if not is_valid:
+            return jsonify({'error': error_msg}), 400
 
         space = ParkingSpace(
             name=name,
@@ -159,6 +210,9 @@ def update_space(space_id):
             space.location = data['location'].strip()
 
         if 'coordinates' in data:
+            is_valid, error_msg = validate_coordinates(data['coordinates'])
+            if not is_valid:
+                return jsonify({'error': error_msg}), 400
             space.coordinates = data['coordinates']
 
         if 'hourly_rate' in data:

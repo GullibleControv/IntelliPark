@@ -88,11 +88,26 @@ def create_app(config_class=Config):
         })
 
     # Database initialization endpoint (call once after deploy)
+    # SECURITY: Protected by INIT_DB_SECRET environment variable
     @app.route('/api/init-db', methods=['POST'])
     def init_database():
+        # Require secret token to prevent unauthorized database resets
+        init_secret = os.getenv('INIT_DB_SECRET')
+        provided_secret = request.headers.get('X-Init-Secret') or request.json.get('secret')
+
+        if not init_secret:
+            # If no secret configured, only allow in development
+            if os.getenv('FLASK_ENV') == 'production' or os.getenv('RENDER'):
+                logger.warning("SECURITY: init-db called in production without INIT_DB_SECRET configured")
+                return jsonify({'error': 'Database initialization disabled in production'}), 403
+        elif provided_secret != init_secret:
+            logger.warning(f"SECURITY: init-db called with invalid secret from {request.remote_addr}")
+            return jsonify({'error': 'Invalid or missing initialization secret'}), 401
+
         try:
             db.create_all()
             seed_admin_user()
+            logger.info("Database initialized via /api/init-db endpoint")
             return jsonify({'status': 'Database initialized successfully'})
         except Exception as e:
             logger.error(f"Database initialization failed: {e}")

@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 
 from app.models import db, ParkingSpace, VideoSource
 from app.utils.auth import admin_required
+from app.routes.parking import validate_coordinates
 
 logger = logging.getLogger(__name__)
 
@@ -232,10 +233,14 @@ def create_bulk_spaces():
     location = data.get('location', 'Default Location')
     created_spaces = []
 
-    for space_data in data['spaces']:
+    skipped = []
+    for idx, space_data in enumerate(data['spaces']):
         coordinates = space_data.get('coordinates', [])
 
-        if len(coordinates) < 3:
+        # Validate coordinates before creating space
+        is_valid, error_msg = validate_coordinates(coordinates)
+        if not is_valid:
+            skipped.append({'index': idx, 'reason': error_msg})
             continue  # Skip invalid polygons
 
         space = ParkingSpace(
@@ -252,10 +257,17 @@ def create_bulk_spaces():
 
     db.session.commit()
 
-    return jsonify({
+    response = {
         'message': f'Created {len(created_spaces)} parking spaces',
         'spaces': [s.to_dict(include_coordinates=True) for s in created_spaces]
-    }), 201
+    }
+
+    # Include skipped spaces info if any were invalid
+    if skipped:
+        response['skipped'] = skipped
+        response['message'] += f', skipped {len(skipped)} invalid'
+
+    return jsonify(response), 201
 
 
 @admin_bp.route('/detection/config', methods=['GET'])

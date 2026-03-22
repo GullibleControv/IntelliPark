@@ -170,13 +170,15 @@ def verify_session():
         if booking.user_id != request.user_id:
             return jsonify({'error': 'Access denied'}), 403
 
-        # Update booking payment status
+        # Update booking payment status and store payment intent for refunds
         if booking.payment_status != 'paid':
             booking.payment_status = 'paid'
             booking.status = 'confirmed'
+            # Store the payment intent ID for potential refunds
+            booking.stripe_payment_intent_id = session.payment_intent
             db.session.commit()
 
-            logger.info(f"Payment confirmed for booking {booking_id}")
+            logger.info(f"Payment confirmed for booking {booking_id}, intent: {session.payment_intent}")
 
             # Send receipt email
             user = User.query.get(request.user_id)
@@ -310,18 +312,47 @@ def create_refund():
         if booking.payment_status != 'paid':
             return jsonify({'error': 'Booking is not paid'}), 400
 
-        # For now, just mark as refunded
-        # Full implementation would call Stripe API to process refund
-        booking.payment_status = 'refunded'
-        booking.status = 'cancelled'
-        db.session.commit()
+        # Check if we have a payment intent to refund
+        if not booking.stripe_payment_intent_id:
+            logger.error(f"No payment intent found for booking {booking.id}")
+            return jsonify({'error': 'Payment information not found. Please contact support.'}), 400
 
-        logger.info(f"Refund processed for booking {booking.id}")
+        # Process refund through Stripe
+        stripe_client = get_stripe()
+        try:
+            refund = stripe_client.Refund.create(
+                payment_intent=booking.stripe_payment_intent_id,
+                reason='requested_by_customer'
+            )
 
-        return jsonify({
-            'message': 'Refund processed',
-            'booking': booking.to_dict()
-        })
+            if refund.status == 'succeeded':
+                booking.payment_status = 'refunded'
+                booking.status = 'cancelled'
+                db.session.commit()
+
+                logger.info(f"Refund processed for booking {booking.id}, refund_id: {refund.id}")
+
+                return jsonify({
+                    'message': 'Refund processed successfully',
+                    'refund_id': refund.id,
+                    'booking': booking.to_dict()
+                })
+            elif refund.status == 'pending':
+                booking.payment_status = 'refund_pending'
+                db.session.commit()
+
+                return jsonify({
+                    'message': 'Refund is being processed',
+                    'refund_id': refund.id,
+                    'booking': booking.to_dict()
+                })
+            else:
+                logger.error(f"Unexpected refund status: {refund.status}")
+                return jsonify({'error': 'Refund failed. Please contact support.'}), 500
+
+        except stripe_client.error.InvalidRequestError as e:
+            logger.error(f"Stripe refund error: {e}")
+            return jsonify({'error': 'Unable to process refund. Payment may have already been refunded.'}), 400
 
     except Exception as e:
         logger.error(f"Refund error: {e}")

@@ -61,8 +61,12 @@ class TestInitDatabase:
 
     @pytest.mark.integration
     def test_init_db_endpoint(self, client):
-        """Should initialize database successfully."""
-        response = client.post('/api/init-db')
+        """Should initialize database successfully in test mode (no secret required)."""
+        response = client.post(
+            '/api/init-db',
+            json={},
+            content_type='application/json'
+        )
 
         assert response.status_code == 200
         data = response.get_json()

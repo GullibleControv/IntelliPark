@@ -82,6 +82,7 @@ class Booking(db.Model):
     total_amount = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(20), default='pending', index=True)  # pending, confirmed, active, completed, cancelled
     payment_status = db.Column(db.String(20), default='unpaid')  # unpaid, paid, refunded
+    stripe_payment_intent_id = db.Column(db.String(255), nullable=True)  # Store Stripe payment ID for refunds
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

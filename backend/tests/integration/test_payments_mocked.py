@@ -91,6 +91,7 @@ class TestVerifySessionMocked:
             mock_session.payment_status = 'paid'
             mock_session.metadata = {'booking_id': str(sample_booking['id'])}
             mock_session.id = 'cs_test_123'
+            mock_session.payment_intent = 'pi_test_123'  # Required for refund functionality
 
             with patch('stripe.checkout.Session.retrieve', return_value=mock_session):
                 response = client.post(
@@ -226,21 +227,31 @@ class TestRefundMocked:
         from app.models import db, Booking
 
         with app.app_context():
-            # Mark booking as paid
+            app.config['STRIPE_SECRET_KEY'] = 'sk_test_mock'
+
+            # Mark booking as paid with payment intent (required for refunds)
             booking = Booking.query.get(sample_booking['id'])
             booking.payment_status = 'paid'
+            booking.stripe_payment_intent_id = 'pi_test_123'
             db.session.commit()
 
-            response = client.post(
-                '/api/payments/refund',
-                headers=auth_headers,
-                json={'booking_id': sample_booking['id']}
-            )
+            # Mock successful Stripe refund
+            mock_refund = MagicMock()
+            mock_refund.status = 'succeeded'
+            mock_refund.id = 're_test_123'
 
-            assert response.status_code == 200
-            data = response.get_json()
-            assert data['booking']['payment_status'] == 'refunded'
-            assert data['booking']['status'] == 'cancelled'
+            with patch('stripe.Refund.create', return_value=mock_refund):
+                response = client.post(
+                    '/api/payments/refund',
+                    headers=auth_headers,
+                    json={'booking_id': sample_booking['id']}
+                )
+
+                assert response.status_code == 200
+                data = response.get_json()
+                assert data['booking']['payment_status'] == 'refunded'
+                assert data['booking']['status'] == 'cancelled'
+                assert data['refund_id'] == 're_test_123'
 
     @pytest.mark.integration
     def test_refund_access_denied(self, client, sample_booking, app):

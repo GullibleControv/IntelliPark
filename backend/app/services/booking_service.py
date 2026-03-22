@@ -6,7 +6,7 @@ import logging
 from datetime import datetime, date, time, timedelta
 
 from app.models import db, Booking, ParkingSpace, RecurringBooking, Waitlist, User
-from app.services.email import send_booking_confirmation
+from app.services.email import send_booking_confirmation, send_email, safe_str
 from app.services.websocket import emit_booking_update
 
 logger = logging.getLogger(__name__)
@@ -192,8 +192,6 @@ def find_available_space(desired_date, start_time, end_time,
 
 def notify_waitlist_user(waitlist_entry: Waitlist, available_space: ParkingSpace):
     """Notify a user that a waitlisted space is now available."""
-    from app.services.email import send_email
-
     waitlist_entry.status = 'notified'
     waitlist_entry.notified_at = datetime.utcnow()
     # Give user 30 minutes to book
@@ -203,14 +201,15 @@ def notify_waitlist_user(waitlist_entry: Waitlist, available_space: ParkingSpace
 
     if user:
         # Send email notification
+        # SECURITY: Escape all user-controlled data to prevent XSS
         try:
             html = f"""
             <h2>Parking Space Available!</h2>
-            <p>Hi {user.name},</p>
+            <p>Hi {safe_str(user.name)},</p>
             <p>Great news! A parking space matching your waitlist request is now available.</p>
             <ul>
-                <li>Location: {available_space.location}</li>
-                <li>Space: {available_space.name}</li>
+                <li>Location: {safe_str(available_space.location)}</li>
+                <li>Space: {safe_str(available_space.name)}</li>
                 <li>Date: {waitlist_entry.desired_date}</li>
                 <li>Time: {waitlist_entry.desired_start_time} - {waitlist_entry.desired_end_time}</li>
             </ul>
