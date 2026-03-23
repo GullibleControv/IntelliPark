@@ -54,3 +54,7 @@ temp/
 
 # Instance folder (SQLite database)
 instance/
+
+# Personal
+INTERVIEW_*.md
+.claude/
