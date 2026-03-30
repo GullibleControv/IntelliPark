@@ -94,12 +94,12 @@ class TestGetSingleSpace:
 
 
 class TestCreateSpace:
-    """Tests for POST /api/parking/spaces"""
+    """Tests for POST /api/parking/spaces (admin only)"""
 
     @pytest.mark.integration
-    def test_create_space_success(self, client, auth_headers):
-        """Should create a new parking space."""
-        response = client.post('/api/parking/spaces', headers=auth_headers, json={
+    def test_create_space_success(self, client, admin_headers):
+        """Should create a new parking space (admin only)."""
+        response = client.post('/api/parking/spaces', headers=admin_headers, json={
             'name': 'B-001',
             'location': 'New Parking Area',
             'hourly_rate': 75.0,
@@ -113,10 +113,10 @@ class TestCreateSpace:
         assert data['space']['hourly_rate'] == 75.0
 
     @pytest.mark.integration
-    def test_create_space_with_coordinates(self, client, auth_headers):
-        """Should create space with polygon coordinates."""
+    def test_create_space_with_coordinates(self, client, admin_headers):
+        """Should create space with polygon coordinates (admin only)."""
         coords = [[0, 0], [50, 0], [50, 50], [0, 50]]
-        response = client.post('/api/parking/spaces', headers=auth_headers, json={
+        response = client.post('/api/parking/spaces', headers=admin_headers, json={
             'name': 'C-001',
             'location': 'Test Area',
             'coordinates': coords
@@ -127,9 +127,9 @@ class TestCreateSpace:
         assert data['space']['coordinates'] == coords
 
     @pytest.mark.integration
-    def test_create_space_missing_fields(self, client, auth_headers):
+    def test_create_space_missing_fields(self, client, admin_headers):
         """Should fail with missing required fields."""
-        response = client.post('/api/parking/spaces', headers=auth_headers, json={
+        response = client.post('/api/parking/spaces', headers=admin_headers, json={
             'name': 'Test'
         })
 
@@ -146,9 +146,19 @@ class TestCreateSpace:
         assert response.status_code == 401
 
     @pytest.mark.integration
-    def test_create_space_invalid_coordinates(self, client, auth_headers):
-        """Should fail with less than 3 coordinate points."""
+    def test_create_space_non_admin_forbidden(self, client, auth_headers):
+        """Should fail for non-admin users."""
         response = client.post('/api/parking/spaces', headers=auth_headers, json={
+            'name': 'Test',
+            'location': 'Test'
+        })
+
+        assert response.status_code == 403
+
+    @pytest.mark.integration
+    def test_create_space_invalid_coordinates(self, client, admin_headers):
+        """Should fail with less than 3 coordinate points."""
+        response = client.post('/api/parking/spaces', headers=admin_headers, json={
             'name': 'Test',
             'location': 'Test',
             'coordinates': [[0, 0], [100, 0]]  # Only 2 points
@@ -161,11 +171,11 @@ class TestUpdateSpace:
     """Tests for PUT /api/parking/spaces/<id>"""
 
     @pytest.mark.integration
-    def test_update_space_success(self, client, auth_headers, sample_parking_space):
-        """Should update parking space."""
+    def test_update_space_success(self, client, admin_headers, sample_parking_space):
+        """Should update parking space (admin only)."""
         response = client.put(
             f'/api/parking/spaces/{sample_parking_space["id"]}',
-            headers=auth_headers,
+            headers=admin_headers,
             json={'name': 'A-001-Updated', 'hourly_rate': 100.0}
         )
 
@@ -175,11 +185,11 @@ class TestUpdateSpace:
         assert data['space']['hourly_rate'] == 100.0
 
     @pytest.mark.integration
-    def test_update_space_not_found(self, client, auth_headers):
+    def test_update_space_not_found(self, client, admin_headers):
         """Should return 404 for non-existent space."""
         response = client.put(
             '/api/parking/spaces/99999',
-            headers=auth_headers,
+            headers=admin_headers,
             json={'name': 'Test'}
         )
 
@@ -190,11 +200,11 @@ class TestDeleteSpace:
     """Tests for DELETE /api/parking/spaces/<id>"""
 
     @pytest.mark.integration
-    def test_delete_space_soft_delete(self, client, app, auth_headers, sample_parking_space):
-        """Should soft delete (deactivate) space."""
+    def test_delete_space_soft_delete(self, client, app, admin_headers, sample_parking_space):
+        """Should soft delete (deactivate) space (admin only)."""
         response = client.delete(
             f'/api/parking/spaces/{sample_parking_space["id"]}',
-            headers=auth_headers
+            headers=admin_headers
         )
 
         assert response.status_code == 200

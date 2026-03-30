@@ -35,18 +35,18 @@ class TestParkingErrorHandling:
     """Tests for error handling in parking routes."""
 
     @pytest.mark.integration
-    def test_create_space_missing_name(self, client, auth_headers):
-        """Should fail with missing name."""
+    def test_create_space_missing_name(self, client, admin_headers):
+        """Should fail with missing name (admin only)."""
         response = client.post('/api/parking/spaces',
-                               headers=auth_headers,
+                               headers=admin_headers,
                                json={'location': 'Test'})
         assert response.status_code == 400
 
     @pytest.mark.integration
-    def test_create_space_missing_location(self, client, auth_headers):
-        """Should fail with missing location."""
+    def test_create_space_missing_location(self, client, admin_headers):
+        """Should fail with missing location (admin only)."""
         response = client.post('/api/parking/spaces',
-                               headers=auth_headers,
+                               headers=admin_headers,
                                json={'name': 'A-001'})
         assert response.status_code == 400
 

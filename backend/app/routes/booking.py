@@ -16,7 +16,12 @@ booking_bp = Blueprint('booking', __name__, url_prefix='/api/bookings')
 @booking_bp.route('', methods=['POST'])
 @token_required
 def create_booking():
-    """Create a new parking booking."""
+    """
+    Create a new parking booking.
+
+    Uses SELECT FOR UPDATE to prevent race conditions where two concurrent
+    requests could both pass the conflict check and create double bookings.
+    """
     try:
         data = request.get_json()
 
@@ -37,15 +42,7 @@ def create_booking():
         if vehicle_number and not validate_vehicle_number(vehicle_number):
             return jsonify({'error': 'Invalid vehicle number format'}), 400
 
-        # Validate parking space
-        space = ParkingSpace.query.get(space_id)
-        if not space:
-            return jsonify({'error': 'Parking space not found'}), 404
-
-        if not space.is_active:
-            return jsonify({'error': 'Parking space is not available'}), 400
-
-        # Parse datetime
+        # Parse datetime (do this before locking to fail fast)
         try:
             start_time = datetime.fromisoformat(start_time_str.replace('Z', '+00:00'))
             end_time = datetime.fromisoformat(end_time_str.replace('Z', '+00:00'))
@@ -59,7 +56,23 @@ def create_booking():
         if start_time < datetime.utcnow():
             return jsonify({'error': 'Cannot book for past times'}), 400
 
-        # Check for conflicting bookings
+        # RACE CONDITION PREVENTION:
+        # Use SELECT FOR UPDATE to lock the parking space row during booking.
+        # This ensures only one request can check and create a booking at a time.
+        # Other concurrent requests will wait until the lock is released.
+
+        # Lock the parking space row
+        space = db.session.query(ParkingSpace).filter_by(
+            id=space_id
+        ).with_for_update().first()
+
+        if not space:
+            return jsonify({'error': 'Parking space not found'}), 404
+
+        if not space.is_active:
+            return jsonify({'error': 'Parking space is not available'}), 400
+
+        # Now safe to check for conflicts - space row is locked
         conflict = Booking.query.filter(
             Booking.space_id == space_id,
             Booking.status.in_(['pending', 'confirmed', 'active']),
@@ -74,7 +87,7 @@ def create_booking():
         duration_hours = (end_time - start_time).total_seconds() / 3600
         total_amount = round(duration_hours * space.hourly_rate, 2)
 
-        # Create booking
+        # Create booking while lock is held
         booking = Booking(
             user_id=request.user_id,
             space_id=space_id,
@@ -86,11 +99,11 @@ def create_booking():
         )
 
         db.session.add(booking)
-        db.session.commit()
+        db.session.commit()  # Releases the lock
 
         logger.info(f"New booking created: {booking.id} for space {space.name}")
 
-        # Send confirmation email
+        # Send confirmation email (outside transaction)
         user = User.query.get(request.user_id)
         if user:
             try:
@@ -104,7 +117,7 @@ def create_booking():
         }), 201
 
     except Exception as e:
-        logger.error(f"Create booking error: {e}")
+        logger.error(f"Create booking error: {e}", exc_info=True)
         db.session.rollback()
         return jsonify({'error': 'Failed to create booking'}), 500
 
