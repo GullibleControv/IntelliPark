@@ -159,10 +159,10 @@ async function loadParkingSpaces() {
         mapEl.innerHTML = spaces.map(space => `
             <div class="parking-space ${space.is_occupied ? 'occupied' : 'available'}"
                  data-space-id="${space.id}"
-                 title="${space.name} - ${space.location}">
-                <span class="space-name">${space.name}</span>
+                 title="${escapeHtml(space.name)} - ${escapeHtml(space.location)}">
+                <span class="space-name">${escapeHtml(space.name)}</span>
                 <span class="space-status">${space.is_occupied ? 'Occupied' : 'Free'}</span>
-                <span class="space-location">${truncateLocation(space.location)}</span>
+                <span class="space-location">${escapeHtml(truncateLocation(space.location))}</span>
             </div>
         `).join('');
 
@@ -184,6 +184,16 @@ function truncateLocation(location) {
         return location.substring(0, 12) + '...';
     }
     return location;
+}
+
+/**
+ * Escape HTML to prevent XSS
+ */
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 /**
@@ -209,8 +219,8 @@ async function loadVideoSources() {
 
         selectEl.innerHTML = '<option value="">Select a video source...</option>';
         sources.forEach(source => {
-            selectEl.innerHTML += `<option value="${source.id}" data-url="${source.url}" data-location="${source.location}">
-                ${source.name} (${source.location})
+            selectEl.innerHTML += `<option value="${source.id}" data-url="${escapeHtml(source.url)}" data-location="${escapeHtml(source.location)}">
+                ${escapeHtml(source.name)} (${escapeHtml(source.location)})
             </option>`;
         });
 
@@ -234,7 +244,7 @@ async function loadLocations() {
 
         selectEl.innerHTML = '<option value="">All Locations</option>';
         locations.forEach(loc => {
-            selectEl.innerHTML += `<option value="${loc}">${loc}</option>`;
+            selectEl.innerHTML += `<option value="${escapeHtml(loc)}">${escapeHtml(loc)}</option>`;
         });
 
     } catch (error) {
@@ -364,8 +374,8 @@ function addActivity(isOccupied, title, message, extra = '') {
         <div class="activity-item ${statusClass}">
             <div class="activity-icon">${icon}</div>
             <div class="activity-content">
-                <strong>${title}</strong>
-                <p>${message}${extra ? ` - ${extra}` : ''}</p>
+                <strong>${escapeHtml(title)}</strong>
+                <p>${escapeHtml(message)}${extra ? ` - ${escapeHtml(extra)}` : ''}</p>
             </div>
             <span class="activity-time">${time}</span>
         </div>
@@ -397,7 +407,7 @@ function addLog(level, message) {
         <div class="log-entry ${level}">
             <span class="log-time">${time}</span>
             <span class="log-badge ${level}">${badgeText}</span>
-            <span class="log-message">${message}</span>
+            <span class="log-message">${escapeHtml(message)}</span>
         </div>
     `;
 

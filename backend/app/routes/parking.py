@@ -3,7 +3,7 @@ import logging
 import re
 
 from app.models import db, ParkingSpace, OccupancyLog
-from app.utils.auth import token_required, optional_token
+from app.utils.auth import token_required, optional_token, admin_required
 from app.services.websocket import emit_space_update, emit_occupancy_summary
 
 logger = logging.getLogger(__name__)
@@ -135,7 +135,7 @@ def get_space(space_id):
 
 
 @parking_bp.route('/spaces', methods=['POST'])
-@token_required
+@admin_required
 def create_space():
     """Create a new parking space (admin only in production)."""
     try:
@@ -188,7 +188,7 @@ def create_space():
 
 
 @parking_bp.route('/spaces/<int:space_id>', methods=['PUT'])
-@token_required
+@admin_required
 def update_space(space_id):
     """Update a parking space."""
     try:
@@ -241,7 +241,7 @@ def update_space(space_id):
 
 
 @parking_bp.route('/spaces/<int:space_id>', methods=['DELETE'])
-@token_required
+@admin_required
 def delete_space(space_id):
     """Delete (deactivate) a parking space."""
     try:

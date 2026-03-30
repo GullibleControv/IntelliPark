@@ -3,11 +3,11 @@ Admin routes for parking space configuration and detection management.
 """
 
 from flask import Blueprint, request, jsonify
-import subprocess
 import base64
 import logging
 import re
 from urllib.parse import urlparse
+import yt_dlp
 
 from app.models import db, ParkingSpace, VideoSource
 from app.utils.auth import admin_required
@@ -72,6 +72,34 @@ def validate_youtube_url(url: str) -> bool:
     return True
 
 
+def extract_video_url(youtube_url: str) -> str:
+    """
+    Extract the direct video stream URL from a YouTube URL using yt-dlp Python API.
+
+    Args:
+        youtube_url: Validated YouTube URL
+
+    Returns:
+        Direct video stream URL
+
+    Raises:
+        Exception: If video extraction fails
+    """
+    ydl_opts = {
+        'format': 'best[height<=720]',
+        'quiet': True,
+        'no_warnings': True,
+        'no_color': True,
+        'socket_timeout': 60
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(youtube_url, download=False)
+        if not info or 'url' not in info:
+            raise ValueError('Could not extract video URL')
+        return info['url']
+
+
 @admin_bp.route('/extract-frame', methods=['POST'])
 @admin_required
 def extract_frame():
@@ -100,21 +128,9 @@ def extract_frame():
         return jsonify({'error': 'Invalid YouTube URL. Only youtube.com and youtu.be URLs are allowed.'}), 400
 
     try:
-        # Use yt-dlp to get the direct video stream URL
-        # SECURITY: URL is validated above, and we use list arguments (not shell=True)
-        result = subprocess.run(
-            ['yt-dlp', '-f', 'best[height<=720]', '-g', youtube_url],
-            capture_output=True,
-            text=True,
-            timeout=60,
-            shell=False  # Explicit: never use shell
-        )
-
-        if result.returncode != 0:
-            logger.error(f"yt-dlp error: {result.stderr}")
-            return jsonify({'error': 'Failed to extract video URL. Check if the URL is valid.'}), 400
-
-        stream_url = result.stdout.strip()
+        # Use yt-dlp Python API to get the direct video stream URL
+        # SECURITY: No subprocess call - uses Python API directly
+        stream_url = extract_video_url(youtube_url)
 
         if not stream_url:
             return jsonify({'error': 'Could not get stream URL'}), 400
@@ -147,10 +163,12 @@ def extract_frame():
             'height': height
         })
 
-    except subprocess.TimeoutExpired:
-        return jsonify({'error': 'Video extraction timed out. Try a different URL.'}), 408
-    except FileNotFoundError:
+    except ImportError as e:
+        logger.error(f"Missing dependency: {e}")
         return jsonify({'error': 'yt-dlp not installed. Run: pip install yt-dlp'}), 500
+    except ValueError as e:
+        logger.error(f"Video extraction error: {e}")
+        return jsonify({'error': 'Failed to extract video URL. Check if the URL is valid.'}), 400
     except Exception as e:
         logger.error(f"Frame extraction error: {e}")
         # SECURITY: Don't leak internal error details to client
