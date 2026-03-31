@@ -145,3 +145,78 @@ class AuthManager {
 
 // Create global auth manager instance
 const auth = new AuthManager();
+
+
+// ============================================
+// Mobile Menu Toggle
+// ============================================
+class MobileMenu {
+    constructor() {
+        this.menuBtn = document.getElementById('mobileMenuBtn');
+        this.mobileNav = document.getElementById('mobileNav');
+        
+        if (this.menuBtn && this.mobileNav) {
+            this.init();
+        }
+    }
+
+    init() {
+        // Toggle menu on button click
+        this.menuBtn.addEventListener('click', () => this.toggle());
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (\!this.menuBtn.contains(e.target) && \!this.mobileNav.contains(e.target)) {
+                this.close();
+            }
+        });
+
+        // Close menu on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.close();
+            }
+        });
+
+        // Close menu on window resize to desktop
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 1024) {
+                this.close();
+            }
+        });
+
+        // Update active link
+        this.updateActiveLink();
+    }
+
+    toggle() {
+        this.menuBtn.classList.toggle('active');
+        this.mobileNav.classList.toggle('active');
+        document.body.style.overflow = this.mobileNav.classList.contains('active') ? 'hidden' : '';
+    }
+
+    close() {
+        this.menuBtn.classList.remove('active');
+        this.mobileNav.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    updateActiveLink() {
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        const links = this.mobileNav.querySelectorAll('a');
+        
+        links.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href === currentPage || href === '/' + currentPage) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
+    }
+}
+
+// Initialize mobile menu when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    new MobileMenu();
+});

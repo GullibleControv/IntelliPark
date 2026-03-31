@@ -12,22 +12,27 @@
 }
 
 .logo-icon {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
     background: var(--primary-gradient);
-    border-radius: 10px;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 800;
+    font-weight: 700;
     font-size: 1.2rem;
+    font-family: var(--font-display);
     color: white;
+    box-shadow: 0 3px 0 var(--primary-darker, #007A47), 0 4px 8px rgba(0,0,0,0.15);
+    border-bottom: 2px solid var(--primary-darker, #007A47);
 }
 
 .logo-text {
-    font-weight: 700;
+    font-weight: 600;
     font-size: 1.3rem;
+    font-family: var(--font-display);
     color: var(--text-dark);
+    letter-spacing: -0.02em;
 }
 
 .footer-logo {
@@ -87,21 +92,26 @@
 
 .hero-badge {
     display: inline-block;
-    padding: 0.5rem 1rem;
-    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    padding: 0.5rem 1.2rem;
+    background: linear-gradient(180deg, #dcfce7 0%, #bbf7d0 100%);
     color: var(--primary-dark);
     font-size: 0.85rem;
     font-weight: 600;
+    font-family: var(--font-body);
     border-radius: var(--radius-full);
     margin-bottom: 1.5rem;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.05), var(--shadow-sm);
+    border: 1px solid rgba(0, 214, 125, 0.3);
 }
 
 .hero-content h1 {
     font-size: 3.5rem;
-    font-weight: 800;
+    font-weight: 700;
+    font-family: var(--font-display);
     line-height: 1.1;
     color: var(--text-dark);
     margin-bottom: 1.5rem;
+    letter-spacing: -0.03em;
 }
 
 .hero-subtitle {
@@ -125,11 +135,12 @@
 }
 
 .hero-card {
-    background: white;
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
     border-radius: var(--radius-xl);
     padding: 2rem;
-    box-shadow: var(--shadow-xl);
+    box-shadow: 0 6px 0 rgba(0,0,0,0.04), var(--shadow-xl);
     border: 1px solid var(--border-color);
+    border-bottom: 3px solid var(--border-color);
     min-width: 320px;
 }
 
@@ -164,15 +175,18 @@
 .hero-stat {
     text-align: center;
     padding: 1rem;
-    background: #f8fafc;
+    background: linear-gradient(180deg, #f0f2f5 0%, #e8ebef 100%);
     border-radius: var(--radius-md);
     flex: 1;
+    box-shadow: var(--shadow-inset, inset 0 2px 4px rgba(0,0,0,0.08));
+    border: 1px solid rgba(0,0,0,0.05);
 }
 
 .hero-stat-value {
     display: block;
     font-size: 2rem;
-    font-weight: 800;
+    font-weight: 700;
+    font-family: var(--font-display);
     color: var(--text-dark);
 }
 
