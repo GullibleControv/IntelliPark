@@ -170,13 +170,21 @@ def verify_session():
         if booking.user_id != request.user_id:
             return jsonify({'error': 'Access denied'}), 403
 
-        # Update booking payment status and store payment intent for refunds
+        # Atomic conditional update prevents race condition with webhook
         if booking.payment_status != 'paid':
-            booking.payment_status = 'paid'
-            booking.status = 'confirmed'
-            # Store the payment intent ID for potential refunds
-            booking.stripe_payment_intent_id = session.payment_intent
+            from sqlalchemy import update as sa_update
+            result = db.session.execute(
+                sa_update(Booking)
+                .where((Booking.id == int(booking_id)) & (Booking.payment_status != 'paid'))
+                .values(
+                    payment_status='paid',
+                    status='confirmed',
+                    stripe_payment_intent_id=session.payment_intent
+                )
+            )
             db.session.commit()
+            if result.rowcount == 0:
+                db.session.refresh(booking)
 
             logger.info(f"Payment confirmed for booking {booking_id}, intent: {session.payment_intent}")
 
@@ -262,10 +270,15 @@ def handle_checkout_completed(session):
         return
 
     if booking.payment_status != 'paid':
-        booking.payment_status = 'paid'
-        booking.status = 'confirmed'
+        from sqlalchemy import update as sa_update
+        result = db.session.execute(
+            sa_update(Booking)
+            .where((Booking.id == int(booking_id)) & (Booking.payment_status != 'paid'))
+            .values(payment_status='paid', status='confirmed')
+        )
         db.session.commit()
-        logger.info(f"Webhook: Payment confirmed for booking {booking_id}")
+        if result.rowcount > 0:
+            logger.info(f"Webhook: Payment confirmed for booking {booking_id}")
 
 
 @payments_bp.route('/booking/<int:booking_id>/status', methods=['GET'])

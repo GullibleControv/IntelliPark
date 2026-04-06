@@ -59,6 +59,34 @@ def create_app(config_class=Config):
     from app.services.websocket import init_socketio
     socketio = init_socketio(app)
 
+    # Initialize and start APScheduler for background tasks
+    if not app.config.get('TESTING'):
+        from apscheduler.schedulers.background import BackgroundScheduler
+        from app.services.booking_service import (
+            generate_recurring_bookings,
+            expire_old_waitlist_notifications,
+            cleanup_old_waitlist_entries
+        )
+        def run_in_context(func):
+            with app.app_context():
+                func()
+
+        scheduler = BackgroundScheduler()
+        scheduler.add_job(
+            func=run_in_context, args=[generate_recurring_bookings],
+            trigger='cron', hour=0, minute=5, id='generate_recurring_bookings'
+        )
+        scheduler.add_job(
+            func=run_in_context, args=[expire_old_waitlist_notifications],
+            trigger='interval', minutes=15, id='expire_old_waitlist_notifications'
+        )
+        scheduler.add_job(
+            func=run_in_context, args=[cleanup_old_waitlist_entries],
+            trigger='cron', hour=3, minute=0, id='cleanup_old_waitlist_entries'
+        )
+        scheduler.start()
+        logger.info("APScheduler started with background jobs")
+
     # Initialize email service
     from app.services.email import init_mail
     init_mail(app)
