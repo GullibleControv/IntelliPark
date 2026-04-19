@@ -3,22 +3,12 @@
  * Handles all API communication with the backend
  */
 
-// Auto-detect API URL: use relative URL in production, localhost in development
-const API_BASE_URL = (function() {
-    const hostname = window.location.hostname;
-    const port = window.location.port;
-
-    // Production: use relative URL (same origin)
-    if (hostname.includes('render.com') ||
-        hostname.includes('onrender.com') ||
-        hostname.includes('railway.app') ||
-        (!port && hostname !== 'localhost' && hostname !== '127.0.0.1')) {
-        return '/api';
-    }
-
-    // Development: use localhost:5000
-    return 'http://localhost:5000/api';
-})();
+// Always use a relative URL so requests are always same-origin.
+// Flask serves both the frontend files AND the /api/* routes from the
+// same process on the same port (5000), so there is never a cross-origin
+// request to worry about regardless of whether you access the app via
+// localhost, 127.0.0.1, or a public domain.
+const API_BASE_URL = '/api';
 
 class ApiClient {
     constructor() {

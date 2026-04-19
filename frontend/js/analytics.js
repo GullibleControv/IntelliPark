@@ -11,7 +11,11 @@
  *   This avoids a visible flash and is cheaper on the browser.
  */
 
-const API_BASE = window.API_BASE || 'http://127.0.0.1:5000';
+// Use an empty string so every fetch URL becomes a relative path (e.g.
+// "/api/parking/analytics").  Relative paths are always same-origin,
+// which eliminates CORS entirely since Flask serves both the frontend
+// and the API from the same port.
+const API_BASE = '';
 
 // ─── Chart instance (module-level singleton) ──────────────────────────────────
 let analyticsChart = null;
