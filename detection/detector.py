@@ -294,6 +294,20 @@ class ParkingDetector:
             logger.error(f"Failed to load spaces from API: {e}")
             return False
 
+    def _get_detector_headers(self) -> dict:
+        """
+        Build the HTTP headers for detector → API calls.
+
+        The DETECTOR_API_KEY env var must match the value configured on the
+        backend.  If it is not set the header is omitted (handy for local
+        dev when DETECTOR_API_KEY is not configured on the server either).
+        """
+        headers: dict = {'Content-Type': 'application/json'}
+        api_key = os.getenv('DETECTOR_API_KEY', '')
+        if api_key:
+            headers['X-Detector-Key'] = api_key
+        return headers
+
     def update_space_status(self, space_id: int, is_occupied: bool, confidence: float = None):
         """Update parking space status via API."""
         try:
@@ -304,6 +318,7 @@ class ParkingDetector:
             response = requests.put(
                 f"{self.api_url}/api/parking/spaces/{space_id}/status",
                 json=payload,
+                headers=self._get_detector_headers(),
                 timeout=5
             )
             response.raise_for_status()

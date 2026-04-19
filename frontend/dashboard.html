@@ -194,6 +194,36 @@
         </section>
 
         <!-- Logs Section -->
+        <!-- ── Occupancy Analytics Chart ─────────────────────────────── -->
+        <section class="analytics-section" style="margin-top:1.5rem;">
+            <div class="section-header" style="display:flex;align-items:center;justify-content:space-between;">
+                <h2>Occupancy Trend (last 24 h)</h2>
+                <div style="display:flex;gap:.5rem;align-items:center;">
+                    <select id="analyticsLocation" style="padding:.35rem .6rem;border-radius:6px;border:1px solid #ccc;font-size:.85rem;">
+                        <option value="">All locations</option>
+                    </select>
+                    <button id="refreshAnalytics" class="btn-secondary" style="padding:.35rem .8rem;font-size:.85rem;">↻ Refresh</button>
+                </div>
+            </div>
+            <div style="background:#fff;border-radius:12px;padding:1.2rem;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+                <canvas id="analyticsChart" height="90"></canvas>
+                <div id="analyticsSummary" style="display:flex;gap:2rem;margin-top:1rem;padding-top:.8rem;border-top:1px solid #f0f0f0;font-size:.85rem;color:#555;flex-wrap:wrap;">
+                    <span>Avg occupancy: <strong id="analyticsAvg">--%</strong></span>
+                    <span>Peak: <strong id="analyticsPeak">--%</strong> at <strong id="analyticsPeakHour">--</strong></span>
+                    <span>Total detection events: <strong id="analyticsTotalEvents">--</strong></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Detection Health ───────────────────────────────────────── -->
+        <section class="health-section" style="margin-top:1.5rem;">
+            <div class="section-header">
+                <h2>Detector Health</h2>
+                <span id="healthBadge" style="padding:.25rem .7rem;border-radius:20px;font-size:.8rem;font-weight:600;background:#e8f5e9;color:#2e7d32;">Checking…</span>
+            </div>
+            <div id="healthGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem;"></div>
+        </section>
+
         <section class="logs-section">
             <div class="section-header">
                 <h2>Detection Logs</h2>
@@ -213,7 +243,9 @@
         <p>&copy; 2024 IntelliPark - AI-Powered Smart Parking Management</p>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
     <script src="js/api.js"></script>
     <script src="js/dashboard.js"></script>
+    <script src="js/analytics.js"></script>
 </body>
 </html>

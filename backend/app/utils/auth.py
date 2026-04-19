@@ -1,3 +1,4 @@
+import os
 import jwt
 import bcrypt
 from datetime import datetime, timedelta
@@ -78,6 +79,33 @@ def optional_token(f):
 
         return f(*args, **kwargs)
 
+    return decorated
+
+
+def detector_key_required(f):
+    """
+    Decorator that validates the X-Detector-Key header.
+
+    The detection process (detector.py) must include this header on every
+    status-update request.  This prevents any random client on the network
+    from spoofing parking-space occupancy.
+
+    The key is loaded from the DETECTOR_API_KEY environment variable at
+    request time so that key rotation never requires a restart.
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        expected_key = os.getenv('DETECTOR_API_KEY', '')
+        if not expected_key:
+            # Key not configured — refuse all requests in production; allow in dev
+            if os.getenv('FLASK_ENV') == 'production':
+                return jsonify({'error': 'Detection endpoint not configured'}), 503
+
+        provided_key = request.headers.get('X-Detector-Key', '')
+        if expected_key and provided_key != expected_key:
+            return jsonify({'error': 'Invalid or missing detector API key'}), 401
+
+        return f(*args, **kwargs)
     return decorated
 
 

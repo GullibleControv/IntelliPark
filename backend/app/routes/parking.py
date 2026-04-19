@@ -1,9 +1,10 @@
 from flask import Blueprint, request, jsonify
 import logging
 import re
+from datetime import datetime, timedelta
 
 from app.models import db, ParkingSpace, OccupancyLog
-from app.utils.auth import token_required, optional_token, admin_required
+from app.utils.auth import token_required, optional_token, admin_required, detector_key_required
 from app.services.websocket import emit_space_update, emit_occupancy_summary
 
 logger = logging.getLogger(__name__)
@@ -265,6 +266,7 @@ def delete_space(space_id):
 
 
 @parking_bp.route('/spaces/<int:space_id>/status', methods=['PUT'])
+@detector_key_required
 def update_space_status(space_id):
     """
     Update parking space occupancy status.
@@ -368,3 +370,177 @@ def get_locations():
     except Exception as e:
         logger.error(f"Get locations error: {e}")
         return jsonify({'error': 'Failed to fetch locations'}), 500
+
+
+# ---------------------------------------------------------------------------
+# Analytics endpoint
+# ---------------------------------------------------------------------------
+
+@parking_bp.route('/analytics', methods=['GET'])
+def get_analytics():
+    """
+    Return hourly occupancy statistics for the last N hours.
+
+    Query params:
+        location  – filter by location (optional)
+        hours     – look-back window, default 24, max 168 (1 week)
+
+    Response shape:
+        {
+          "hours": 24,
+          "location": "...",
+          "timeline": [
+            {"hour": "2026-04-19T10:00:00", "occupancy_rate": 72.5,
+             "events": 14},
+            ...
+          ],
+          "summary": {
+            "avg_occupancy_rate": 61.3,
+            "peak_hour": "2026-04-19T08:00:00",
+            "peak_rate": 95.0,
+            "total_events": 182
+          }
+        }
+    """
+    try:
+        location = request.args.get('location')
+        hours = min(int(request.args.get('hours', 24)), 168)
+
+        since = datetime.utcnow() - timedelta(hours=hours)
+
+        # Base log query joined with space for location filtering
+        log_query = (
+            db.session.query(OccupancyLog, ParkingSpace)
+            .join(ParkingSpace, OccupancyLog.space_id == ParkingSpace.id)
+            .filter(OccupancyLog.detected_at >= since)
+            .filter(ParkingSpace.is_active == True)
+        )
+
+        if location:
+            safe_loc = sanitize_like_pattern(location)
+            log_query = log_query.filter(
+                ParkingSpace.location.ilike(f'%{safe_loc}%', escape='\\')
+            )
+
+        logs = log_query.all()
+
+        # Total active spaces for the location (denominator for occupancy %)
+        space_query = ParkingSpace.query.filter_by(is_active=True)
+        if location:
+            space_query = space_query.filter(
+                ParkingSpace.location.ilike(f'%{sanitize_like_pattern(location)}%', escape='\\')
+            )
+        total_spaces = space_query.count() or 1  # avoid divide-by-zero
+
+        # Bucket logs into 1-hour buckets
+        buckets: dict[str, dict] = {}
+        for h in range(hours):
+            bucket_dt = (datetime.utcnow() - timedelta(hours=hours - h)).replace(
+                minute=0, second=0, microsecond=0
+            )
+            key = bucket_dt.isoformat()
+            buckets[key] = {'occupied_events': 0, 'events': 0, 'bucket_dt': bucket_dt}
+
+        for log_entry, space in logs:
+            bucket_dt = log_entry.detected_at.replace(minute=0, second=0, microsecond=0)
+            key = bucket_dt.isoformat()
+            if key not in buckets:
+                buckets[key] = {'occupied_events': 0, 'events': 0, 'bucket_dt': bucket_dt}
+            buckets[key]['events'] += 1
+            if log_entry.is_occupied:
+                buckets[key]['occupied_events'] += 1
+
+        # Build sorted timeline
+        timeline = []
+        for key in sorted(buckets):
+            b = buckets[key]
+            rate = round((b['occupied_events'] / total_spaces) * 100, 1) if b['events'] else 0.0
+            timeline.append({
+                'hour': key,
+                'occupancy_rate': min(rate, 100.0),
+                'events': b['events']
+            })
+
+        # Summary stats
+        rates = [t['occupancy_rate'] for t in timeline if t['events'] > 0]
+        total_events = sum(t['events'] for t in timeline)
+        avg_rate = round(sum(rates) / len(rates), 1) if rates else 0.0
+        peak = max(timeline, key=lambda x: x['occupancy_rate'], default=None)
+
+        return jsonify({
+            'hours': hours,
+            'location': location,
+            'timeline': timeline,
+            'summary': {
+                'avg_occupancy_rate': avg_rate,
+                'peak_hour': peak['hour'] if peak else None,
+                'peak_rate': peak['occupancy_rate'] if peak else 0.0,
+                'total_events': total_events
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"Analytics error: {e}")
+        return jsonify({'error': 'Failed to fetch analytics'}), 500
+
+
+# ---------------------------------------------------------------------------
+# Detection health endpoint
+# ---------------------------------------------------------------------------
+
+@parking_bp.route('/detection-health', methods=['GET'])
+def get_detection_health():
+    """
+    Show when each parking space was last updated by the detector.
+
+    A space is considered "stale" if no detection event was recorded
+    in the last 5 minutes — indicating the detector may have stopped.
+
+    Response shape:
+        {
+          "healthy_spaces": 8,
+          "stale_spaces": 2,
+          "spaces": [
+            {"id": 1, "name": "A-01", "location": "Level 1",
+             "last_detected_at": "2026-04-19T16:30:00", "is_stale": false},
+            ...
+          ]
+        }
+    """
+    try:
+        stale_threshold = datetime.utcnow() - timedelta(minutes=5)
+
+        spaces = ParkingSpace.query.filter_by(is_active=True).all()
+
+        result = []
+        for space in spaces:
+            latest_log = (
+                OccupancyLog.query
+                .filter_by(space_id=space.id)
+                .order_by(OccupancyLog.detected_at.desc())
+                .first()
+            )
+
+            last_detected = latest_log.detected_at if latest_log else None
+            is_stale = (last_detected is None) or (last_detected < stale_threshold)
+
+            result.append({
+                'id': space.id,
+                'name': space.name,
+                'location': space.location,
+                'last_detected_at': last_detected.isoformat() if last_detected else None,
+                'is_stale': is_stale
+            })
+
+        healthy = sum(1 for r in result if not r['is_stale'])
+        stale = len(result) - healthy
+
+        return jsonify({
+            'healthy_spaces': healthy,
+            'stale_spaces': stale,
+            'spaces': result
+        })
+
+    except Exception as e:
+        logger.error(f"Detection health error: {e}")
+        return jsonify({'error': 'Failed to fetch detection health'}), 500
